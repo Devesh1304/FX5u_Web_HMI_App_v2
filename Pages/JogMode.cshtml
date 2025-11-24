@@ -1,0 +1,727 @@
+﻿@page
+@model FX5u_Web_HMI_App.Pages.JogModeModel
+@{
+}
+<style>
+    /* ... (CSS code remains the same as in the original provided code) ... */
+    .hmi-btn {
+        flex-grow: 1;
+        padding: 15px;
+        font-size: 1.1em;
+        font-weight: bold;
+        color: white;
+        border: 2px solid #343a40;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease, visibility 0.3s ease;
+    }
+
+    .hmi-container {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        width: 100%;
+        background-color: #000080; /* Dark blue background */
+        color: #FFF;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        overflow: hidden;
+    }
+
+    .btn-green {
+        background-color: #28a745;
+    }
+
+    .btn-red {
+        background-color: #dc3545;
+    }
+
+    .btn-blue {
+        background-color: #007bff;
+    }
+
+    .button-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(2, 1fr);
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    /* Other CSS */
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #e9ecef;
+        color: #343a40;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        min-height: 100vh;
+        margin: 0;
+        padding-top: 50px;
+    }
+
+    .container {
+        background-color: #ffffff;
+        padding: 40px;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 800px;
+        text-align: center;
+    }
+
+    h1 {
+        color: #007bff;
+        margin-bottom: 30px;
+    }
+
+    input[type="number"] {
+        text-align: right;
+        width: calc(100% - 22px);
+        padding: 10px;
+        border: 1px solid #ced4da;
+        border-radius: 5px;
+        font-size: 1.05em;
+        box-sizing: border-box;
+    }
+
+    .status-message {
+        margin-top: 25px;
+        padding: 12px;
+        border-radius: 5px;
+        font-weight: 500;
+        font-size: 1.1em;
+        border: 1px solid;
+    }
+
+    .status-connected {
+        background-color: #d4edda;
+        color: #155724;
+        border-color: #c3e6cb;
+    }
+
+    .status-disconnected {
+        background-color: #f8d7da;
+        color: #721c24;
+        border-color: #f5c6cb;
+    }
+
+    .error-message, .write-status.error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+        padding: 12px;
+        margin-top: 15px;
+        border-radius: 5px;
+        font-weight: 500;
+        text-align: left;
+    }
+
+    .register-list {
+        margin-top: 20px;
+        text-align: left;
+    }
+
+    .register-item {
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+    }
+
+        .register-item label {
+            flex: 0 0 250px;
+            margin-right: 15px;
+            font-weight: 600;
+            color: #5a6268;
+            text-align: left;
+        }
+
+        .register-item input, .register-item .read-only-value {
+            flex-grow: 1;
+        }
+
+    .read-only-value {
+        font-weight: bold;
+        color: #0056b3;
+        text-align: right;
+        padding: 10px;
+        font-size: 1.05em;
+    }
+
+    .write-status {
+        margin-top: 15px;
+        padding: 10px;
+        border-radius: 5px;
+        font-weight: 500;
+        text-align: left;
+        min-height: 1.5em;
+        border: 1px solid transparent;
+    }
+
+        .write-status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+    .bar-graph-container {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 10px;
+    }
+
+    .bar-graph-label {
+        font-weight: 600;
+        color: #343a40;
+        width: 235px;
+        text-align: left;
+    }
+
+    .bar-graph-track {
+        flex-grow: 1;
+        height: 30px;
+        background-color: #e9ecef;
+        border: 1px solid #ced4da;
+        border-radius: 5px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .bar-graph-fill {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        background-color: #28a745;
+        transition: width 0.5s ease-in-out;
+    }
+
+    .bar-graph-value {
+        font-weight: bold;
+        width: 50px;
+        text-align: right;
+    }
+
+    .main-button-container {
+        display: grid;
+        /* This creates 3 equal columns, just like the grid above */
+        grid-template-columns: repeat(3, 1fr);
+        /* This matches the spacing of the grid above */
+        gap: 10px;
+        margin-top: 10px; /* Adds a bit of space */
+    }
+    /* --- NEW STYLES FOR LAMP INDICATORS --- */
+    .indicator-section {
+        margin-top: 25px;
+        padding-top: 15px;
+        border-top: 1px solid #dee2e6;
+    }
+
+    .indicator-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+
+        .indicator-item label {
+            font-weight: 600;
+            color: #5a6268;
+            font-size: 1.1em;
+        }
+
+    .led-indicator {
+        width: 28px;
+        height: 28px;
+        background-color: #dc3545; /* Default to Red (OFF) */
+        border-radius: 50%; /* Makes it a circle */
+        border: 2px solid #333;
+        transition: background-color 0.3s ease;
+        box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+    }
+
+    .led-on {
+        background-color: #28a745; /* Green (ON) */
+        box-shadow: 0 0 10px #28a745, inset 0 0 5px rgba(255,255,255,0.5);
+    }
+</style>
+<div class="container text-center">
+    <h1>Jog Mode Screen</h1>
+    @Html.AntiForgeryToken()
+
+    <div class="status-message" id="connectionStatus"></div>
+    <div class="error-message" id="errorMessage" style="display: none;"></div>
+
+    <div class="register-list">
+        <div class="register-item"><label>INSANT. TORQUE (%):</label><span class="read-only-value" id="InstantTorque"></span></div>        
+        <div class="register-item"><label>CURRENT POSITION (mm):</label><span class="read-only-value" id="CurrentPosition"></span></div>
+        <div class="register-item"><label>POSITION AT EMG. (mm):</label><span class="read-only-value" id="PositionAtEmergency"></span></div>
+        <div class="register-item"><label for="ServoJogSpeed">SERVO JOG SPEED:</label><input type="number" id="ServoJogSpeed" /></div>
+        <div class="register-item"><label for="ActuatorInSetTime">ACTUATOR IN SET TIME:</label><input type="number" id="ActuatorInSetTime" /></div>
+        <div class="register-item"><label for="ActuatorOutSetTime">ACTUATOR OUT SET TIME:</label><input type="number" id="ActuatorOutSetTime" /></div>
+    </div>
+
+    <div class="button-grid">
+
+        <button class="hmi-btn hmi-interactive-btn" id="btn-jog-mode">JOG MODE</button>
+        <button class="hmi-btn hmi-interactive-btn" id="btn-in">IN</button>
+        <button class="hmi-btn hmi-interactive-btn" id="btn-out">OUT</button>
+        <button class="hmi-btn hmi-interactive-btn" id="btn-actuator">ACTUATOR</button>
+        <button class="hmi-btn hmi-interactive-btn" id="btn-emg">EMERGENCY</button>
+
+
+    </div>
+    <!-- --- NEW HTML FOR LAMP INDICATORS --- -->
+    <div class="indicator-section">
+        <div class="indicator-item">
+            <label>ACTUATOR IN (Y4):</label>
+            <div id="y4-status-indicator" class="led-indicator"></div>
+        </div>
+        <div class="indicator-item">
+            <label>ACTUATOR OUT (Y5):</label>
+            <div id="y5-status-indicator" class="led-indicator"></div>
+        </div>
+    </div>
+    <div class="write-status" id="writeStatusMessage"></div>
+    <div class="main-button-container"><button class="btn-blue hmi-btn hmi-interactive-btn" id="btn-home">HOME</button></div>
+</div>
+@section Scripts {
+    <script>
+        const writeStatusMessageDiv = document.getElementById('writeStatusMessage');
+        const writableRegisterIds = ["ServoJogSpeed", "ActuatorInSetTime", "ActuatorOutSetTime"];
+        const readOnlyRegisterIds = ["InstantTorque", "CurrentPosition", "PositionAtEmergency"];
+        const fieldsToDivideBy10 = [           
+            "CurrentPosition",
+            "PositionAtEmergency"
+
+        ];
+        const fieldsToDivideBy10timer = [
+
+            "ActuatorInSetTime",
+            "ActuatorOutSetTime"
+        ];
+
+        let registerValues = {
+            D1001: 0,
+            D1002: 0,
+            D100: 0,
+            D1402: 0,
+            StatusBits: 0,
+            OutputStatusBits: 0
+        };
+
+        const buttonConfig = {
+
+        'btn-jog-mode': {
+            actions: [{ type: 'toggle', register: 'D1402', position: 4 },
+                     { type: 'reset', register: 'D1001', position: 0 },
+                    { type: 'reset', register: 'D1001', position: 1 },
+                    { type: 'reset', register: 'D1001', position: 2 },
+                    { type: 'reset', register: 'D1001', position: 3 },
+                    { type: 'reset', register: 'D1001', position: 4 },
+                    { type: 'reset', register: 'D1001', position: 7 },
+                    { type: 'reset', register: 'D1402', position: 0 },
+                    { type: 'reset', register: 'D1402', position: 1 },
+                    { type: 'reset', register: 'D1402', position: 7 }],
+            conditionBit: { register: 'D1002', position: 0 }
+        },
+        'btn-in': {
+            actions: [{ type: 'momentary', register: 'D1402', position: 2 }],
+            conditionBit: { register: 'D1402', position: 4 },
+            visibilityBit: { register: 'D1402', position: 3 },
+            conditionBehavior: 'allowOnHigh'
+        },
+        'btn-out': {            
+            actions: [{ type: 'momentary', register: 'D1402', position: 3 }],            
+            conditionBit: { register: 'D1402', position: 4 },
+            visibilityBit: { register: 'D1402', position: 2 },
+            conditionBehavior: 'allowOnHigh'
+
+        },
+        'btn-actuator': {
+            actions: [],
+            momentarySideEffect: { address: 'M31' },
+            statusBit: { register: 'StatusBits', position: 0 }
+        },
+
+        'btn-emg': {
+                actions: [
+                    { type: 'toggle', register: 'D1002', position: 0 },
+                    { type: 'reset', register: 'D1001', position: 0 },
+                    { type: 'reset', register: 'D1001', position: 1 },
+                    { type: 'reset', register: 'D1001', position: 2 },
+                    { type: 'reset', register: 'D1001', position: 3 },
+                    { type: 'reset', register: 'D1001', position: 4 },
+                    { type: 'reset', register: 'D1001', position: 7 },
+                    { type: 'reset', register: 'D1402', position: 0 },
+                    { type: 'reset', register: 'D1402', position: 1 },
+                    { type: 'reset', register: 'D1402', position: 2 },
+                    { type: 'reset', register: 'D1402', position: 3 },
+                    { type: 'reset', register: 'D1402', position: 4 },
+                    { type: 'reset', register: 'D100', position: 5 }
+                ],
+                momentarySideEffect: { address: 'M501' }
+            },
+
+
+        'btn-home': {
+                actions: [
+
+                    { type: 'reset', register: 'D1402', position: 2 },
+                    { type: 'reset', register: 'D1402', position: 3 },
+                    { type: 'reset', register: 'D1402', position: 4 }
+
+                ],
+                           conditionBit: { register: 'OutputStatusBits', position: 2 },
+                redirect: '/Index'
+            }
+
+        };
+   async function performActionsAndAwait(actions) {
+            // A Map to store the final calculated value for each register we need to update.
+            const registersToUpdate = new Map();
+
+            // Step 1: Loop through all actions to calculate the final value for each register.
+            for (const action of actions) {
+                if (action.type === 'momentary') continue; // Skip momentary actions
+
+                const registerName = action.register;
+
+                // Get the current value, either from our map if we've already modified it,
+                // or from the global state if this is the first time we're seeing this register.
+                let currentValue = registersToUpdate.has(registerName)
+                    ? registersToUpdate.get(registerName)
+                    : registerValues[registerName];
+
+                let newValue = currentValue;
+                if (action.type === 'toggle') {
+                    newValue ^= (1 << action.position);
+                } else if (action.type === 'set') {
+                    newValue |= (1 << action.position);
+                } else if (action.type === 'reset') {
+                    newValue &= ~(1 << action.position);
+                }
+
+                // Store the newly calculated value back in our map.
+                registersToUpdate.set(registerName, newValue);
+            }
+
+            // Step 2: Now that all calculations are done, send one write command for each register.
+            const writePromises = [];
+            for (const [registerName, finalValue] of registersToUpdate) {
+                writePromises.push(writeRegister(registerName, finalValue.toString()));
+            }
+
+            // Wait for all the unique write commands to complete.
+            return Promise.all(writePromises);
+        }
+
+        function updateButtonStyles() {
+            for (const buttonId in buttonConfig) {
+                const config = buttonConfig[buttonId];
+                const button = document.getElementById(buttonId);
+                if (!button) continue;
+
+                // Handle button color
+                // First, check for the new 'statusBit' property for indicator-only buttons
+                if (config.statusBit) {
+                    const isBitOn = (registerValues[config.statusBit.register] >> config.statusBit.position) & 1;
+                    button.classList.toggle('btn-green', isBitOn);
+                    button.classList.toggle('btn-red', !isBitOn);
+                }
+                // If it's not an indicator, fall back to the old logic for action buttons
+                else if (config.actions && config.actions.length > 0) {
+                    const action = config.actions.find(a => a.type === 'toggle' || a.type === 'momentary');
+                    if (action) {
+                        const isBitOn = (registerValues[action.register] >> action.position) & 1;
+                        button.classList.toggle('btn-green', isBitOn);
+                        button.classList.toggle('btn-red', !isBitOn);
+                    } else {
+                        // Default color for buttons with no toggle/momentary action (e.g., reset-only)
+                        button.classList.remove('btn-green');
+                        button.classList.add('btn-red');
+                    }
+                }
+
+
+
+                // Handle visibility (this logic doesn't need to change)
+                if (config.visibilityBit) {
+                    const visRegister = config.visibilityBit.register;
+                    const visPosition = config.visibilityBit.position;
+                    const isVisible = (registerValues[visRegister] >> visPosition) & 1;
+                    button.style.visibility = isVisible ? 'hidden' : 'visible';
+                }
+            }
+        }
+
+             function updateUI(data) {
+            const statusDiv = document.getElementById('connectionStatus');
+            const errorDiv = document.getElementById('errorMessage');
+
+            statusDiv.className = `status-message ${data.connectionStatus.toLowerCase().includes('connected') ? 'status-connected' : 'status-disconnected'}`;
+            errorDiv.style.display = data.errorMessage ? 'block' : 'none';
+            errorDiv.innerHTML = data.errorMessage ? `<strong>Error:</strong> ${data.errorMessage}` : '';
+            statusDiv.textContent = `Connection Status: ${data.connectionStatus}`;
+
+            // Update writable inputs
+            writableRegisterIds.forEach(id => {
+                const input = document.getElementById(id);
+                const dataKey = id.charAt(0).toLowerCase() + id.slice(1);
+                if (input && document.activeElement !== input && data[dataKey] !== undefined) {
+                     let displayValue = data[dataKey];
+                     if (fieldsToDivideBy10timer.includes(id)) {
+                        displayValue = (data[dataKey] / 10.0).toFixed(1);
+                     }
+                     input.value = displayValue;
+                }
+            });
+
+            // Update read-only spans
+            readOnlyRegisterIds.forEach(id => {
+                const span = document.getElementById(id);
+                const dataKey = id.charAt(0).toLowerCase() + id.slice(1);
+                if (span && data[dataKey] !== undefined) {
+                    let displayValue = data[dataKey];
+                    if (fieldsToDivideBy10timer.includes(id)) {
+                        displayValue = (data[dataKey] / 10.0).toFixed(1);
+                    }
+                    else if (fieldsToDivideBy10.includes(id)) {
+                        displayValue = (data[dataKey] / 440.0).toFixed(1);
+                    }
+                    span.textContent = displayValue;
+                }
+            });
+
+            // --- LOGIC TO CONTROL THE LAMPS (NOW IN THE CORRECT PLACE) ---
+            const y4Indicator = document.getElementById('y4-status-indicator');
+            const y5Indicator = document.getElementById('y5-status-indicator');
+
+            if (y4Indicator && y5Indicator && data.outputStatusBits !== undefined) {
+                // Check if bit 0 is ON for Y4
+                const isY4On = (data.outputStatusBits >> 0) & 1;
+                y4Indicator.classList.toggle('led-on', isY4On);
+
+                // Check if bit 1 is ON for Y5
+                const isY5On = (data.outputStatusBits >> 1) & 1;
+                y5Indicator.classList.toggle('led-on', isY5On);
+            }
+            // --- END OF CORRECTED LOGIC ---
+
+            // Update local registerValues for button logic
+            for (const key in registerValues) {
+                const dataKey = key.charAt(0).toLowerCase() + key.slice(1);
+                if (data[dataKey] !== undefined) {
+                    registerValues[key] = data[dataKey];
+                }
+            }
+
+            updateButtonStyles();
+        }
+
+        async function fetchModbusData() {
+            try {
+                const response = await fetch('/JogMode?handler=ReadRegisters');
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json();
+                updateUI(data);
+            } catch (error) {
+                updateUI({ connectionStatus: "Fetch Error", errorMessage: error.message });
+            }
+        }
+
+        async function writeRegister(name, value) {
+                   writeStatusMessageDiv.textContent = `Sending new value for ${name}...`;
+                   writeStatusMessageDiv.className = 'write-status';
+
+                   let valueToSend = value;
+                   if (fieldsToDivideBy10timer.includes(name)) {
+                       const floatValue = parseFloat(value);
+                       if (!isNaN(floatValue)) {
+                           valueToSend = Math.round(floatValue * 10).toString();
+                       } else {
+                           writeStatusMessageDiv.textContent = `Invalid number format for ${name}.`;
+                           writeStatusMessageDiv.className = 'write-status error';
+                           return;
+                       }
+                   }
+
+                   try {
+                       const response = await fetch(`/JogMode?handler=WriteRegister`, {
+                           method: 'POST',
+                           headers: {
+                               'Content-Type': 'application/json',
+                               // CORRECTED: This selector now finds the token anywhere on the page
+                               'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                           },
+                           body: JSON.stringify({ RegisterName: name, Value: valueToSend })
+                       });
+
+                       if (!response.ok) throw new Error(`Server responded with status ${response.status}`);
+
+                       const result = await response.json();
+                       writeStatusMessageDiv.textContent = result.message;
+                       writeStatusMessageDiv.className = `write-status ${result.status.toLowerCase()}`;
+                       await fetchData();
+                   } catch (error) {
+                       writeStatusMessageDiv.textContent = `Write failed: ${error.message}`;
+                       writeStatusMessageDiv.className = 'write-status error';
+                   }
+               }
+                // In your <script> section
+
+        async function writeBit(address, value) {
+            // This function doesn't need to return a complex promise,
+            // as it's for a quick side-effect.
+            try {
+                await fetch(`/JogMode?handler=WriteBit`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify({ Address: address, Value: value })
+                });
+            } catch (error) {
+                console.error(`Write bit failed for ${address}:`, error);
+            }
+        }
+        async function fetchData() {
+            try {
+                const response = await fetch('?handler=ReadRegisters');
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json();
+                updateUI(data);
+            } catch (error) {
+                updateUI({ connectionStatus: "Fetch Error", errorMessage: error.message });
+            }
+        }
+        // --- Event Handlers ---
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Event listener for writable input fields...
+            writableRegisterIds.forEach(id => {
+                const input = document.getElementById(id);
+                if (input) {
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            writeRegister(id, input.value);
+                        }
+                    });
+                }
+            });
+
+            // Unified event listener for all interactive buttons
+            document.querySelectorAll('.hmi-interactive-btn').forEach(button => {
+                const config = buttonConfig[button.id];
+                if (!config) return;
+
+                const isPrimaryActionMomentary = config.actions.some(a => a.type === 'momentary');
+
+                if (isPrimaryActionMomentary) {
+                    const action = config.actions.find(a => a.type === 'momentary');
+
+                    // --- Mousedown event handler (PRESS) ---
+                    const pressAction = async () => {
+                        // --- THIS IS THE CORRECTED LOGIC ---
+                        // First, check the condition bit before doing anything
+                        if (config.conditionBit) {
+                            const isConditionBitHigh = (registerValues[config.conditionBit.register] >> config.conditionBit.position) & 1;
+                            let isBlocked = false;
+
+                            if (config.conditionBehavior === 'allowOnHigh') {
+                                if (!isConditionBitHigh) isBlocked = true; // Block if bit is LOW
+                            } else {
+                                if (isConditionBitHigh) isBlocked = true; // Default: Block if bit is HIGH
+                            }
+
+                            if (isBlocked) {
+                                writeStatusMessageDiv.textContent = `Action for ${button.id} prevented: Condition not met.`;
+                                writeStatusMessageDiv.className = 'write-status error';
+                                button.setAttribute('data-is-blocked', 'true'); // Mark as blocked
+                                return; // Stop the action
+                            }
+                        }
+
+                        // If not blocked, proceed with the action
+                        button.setAttribute('data-is-blocked', 'false');
+                        let newValue = registerValues[action.register] | (1 << action.position);
+                        await writeRegister(action.register, newValue.toString());
+                        await fetchModbusData();
+                    };
+
+                    // --- Mouseup event handler (RELEASE) ---
+                    const releaseAction = async () => {
+                        // Only perform the release action if the press action was not blocked
+                        if (button.getAttribute('data-is-blocked') === 'true') {
+                            return;
+                        }
+                        let newValue = registerValues[action.register] & ~(1 << action.position);
+                        await writeRegister(action.register, newValue.toString());
+                        await fetchModbusData();
+                    };
+
+                    button.addEventListener('mousedown', pressAction);
+                    button.addEventListener('mouseup', releaseAction);
+                    button.addEventListener('mouseleave', releaseAction);
+                    button.addEventListener('touchstart', (e) => { e.preventDefault(); pressAction(); });
+                    button.addEventListener('touchend', (e) => { e.preventDefault(); releaseAction(); });
+
+                } else {
+                    // Logic for standard CLICK buttons
+                    button.addEventListener('click', async () => {
+                        try {
+                            if (config.conditionBit) {
+                                const isConditionBitHigh = (registerValues[config.conditionBit.register] >> config.conditionBit.position) & 1;
+                                let isBlocked = false;
+                                if (config.conditionBehavior === 'allowOnHigh') {
+                                    if (!isConditionBitHigh) isBlocked = true;
+                                } else {
+                                    if (isConditionBitHigh) isBlocked = true;
+                                }
+                                if (isBlocked) {
+                                    writeStatusMessageDiv.textContent = `Action for ${button.id} prevented: Condition not met.`;
+                                    writeStatusMessageDiv.className = 'write-status error';
+                                    return;
+                                }
+                            }
+                            await performActionsAndAwait(config.actions);
+                            await fetchModbusData();
+                            if (config.redirect) {
+                                window.location.href = config.redirect;
+                            }
+                        } catch (error) {
+                            console.error("Write failed:", error);
+                            writeStatusMessageDiv.textContent = `Error: ${error.message}`;
+                            writeStatusMessageDiv.className = 'write-status error';
+                        }
+                    });
+                }
+
+                // Logic for the MOMENTARY SIDE-EFFECT
+                if (config.momentarySideEffect) {
+                    const address = config.momentarySideEffect.address;
+                    const press = async () => {
+                        await writeBit(address, true);
+                        await fetchModbusData();
+                    };
+                    const release = async () => {
+                        await writeBit(address, false);
+                        await fetchModbusData();
+                    };
+                    button.addEventListener('mousedown', press);
+                    button.addEventListener('mouseup', release);
+                    button.addEventListener('mouseleave', release);
+                    button.addEventListener('touchstart', (e) => { e.preventDefault(); press(); });
+                    button.addEventListener('touchend', (e) => { e.preventDefault(); release(); });
+                }
+            });
+
+            // Initial data fetch and set up recurring update
+            fetchModbusData();
+            setInterval(fetchModbusData, 1000);
+        });
+    </script>
+}
