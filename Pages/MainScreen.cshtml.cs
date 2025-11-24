@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System;
+using System.Globalization; // Needed for CultureInfo
 
 namespace FX5u_Web_HMI_App.Pages
 {
@@ -71,17 +72,8 @@ namespace FX5u_Web_HMI_App.Pages
         {
             try
             {
-                var n1 = await _slmpService.ReadStringAsync("D4410", 10);
-                var n2 = await _slmpService.ReadStringAsync("D4420", 10);
-                var n3 = await _slmpService.ReadStringAsync("D4430", 10);
-                var n4 = await _slmpService.ReadStringAsync("D4440", 10);
-
-                string s1 = (n1.Content ?? "").TrimEnd('\0');
-                string s2 = (n2.Content ?? "").TrimEnd('\0');
-                string s3 = (n3.Content ?? "").TrimEnd('\0');
-                string s4 = (n4.Content ?? "").TrimEnd('\0');
-
-                return new JsonResult(new { success = true, names = new[] { s1, s2, s3, s4 } });
+                var names = await ReadBreakerTypesEnAsync();
+                return new JsonResult(new { success = true, names });
             }
             catch (Exception ex)
             {
@@ -90,49 +82,65 @@ namespace FX5u_Web_HMI_App.Pages
             }
         }
 
-        // ============= Breaker names localized via DB (English->Gujarati) =============
-        public async Task<JsonResult> OnGetReadBreakerTypesLocalized(string lang = "gu")
+        // ============= Localized Breaker Names (DB Fallback) =============
+        public async Task<JsonResult> OnGetReadBreakerTypesLocalized(string lang)
         {
             try
             {
-                var n1 = await _slmpService.ReadStringAsync("D4410", 10);
-                var n2 = await _slmpService.ReadStringAsync("D4420", 10);
-                var n3 = await _slmpService.ReadStringAsync("D4430", 10);
-                var n4 = await _slmpService.ReadStringAsync("D4440", 10);
-
-                var englishKeys = new[]
+                // Detect lang from culture if parameter missing
+                if (string.IsNullOrEmpty(lang))
                 {
-                    (n1.Content ?? "").TrimEnd('\0'),
-                    (n2.Content ?? "").TrimEnd('\0'),
-                    (n3.Content ?? "").TrimEnd('\0'),
-                    (n4.Content ?? "").TrimEnd('\0'),
-                };
-
-                if (string.IsNullOrWhiteSpace(lang) || lang == "en")
-                    return new JsonResult(new { success = true, names = englishKeys });
-
-                if (lang == "gu")
-                {
-                    var trans = await _db.NameTranslations
-                        .Where(t => englishKeys.Contains(t.En))
-                        .ToListAsync();
-
-                    var outNames = new List<string>(4);
-                    foreach (var en in englishKeys)
-                    {
-                        var hit = trans.FirstOrDefault(t => t.En == en);
-                        outNames.Add(!string.IsNullOrWhiteSpace(hit?.Gu) ? hit.Gu : en);
-                    }
-                    return new JsonResult(new { success = true, names = outNames });
+                    lang = CultureInfo.CurrentUICulture.Name.StartsWith("gu", StringComparison.OrdinalIgnoreCase) ? "gu" : "en";
                 }
 
-                return new JsonResult(new { success = true, names = englishKeys });
+                var englishKeys = await ReadBreakerTypesEnAsync();
+
+                if (!string.Equals(lang, "gu", StringComparison.OrdinalIgnoreCase))
+                    return new JsonResult(new { success = true, names = englishKeys });
+
+                // 1. Auto-Seed: Add missing English keys to DB
+                foreach (var key in englishKeys.Where(s => !string.IsNullOrWhiteSpace(s)).Distinct())
+                {
+                    if (!await _db.NameTranslations.AnyAsync(t => t.En == key))
+                        _db.NameTranslations.Add(new NameTranslation { En = key, Gu = "" });
+                }
+                await _db.SaveChangesAsync();
+
+                // 2. Map EN -> GU
+                var keys = englishKeys.Where(s => !string.IsNullOrWhiteSpace(s)).Distinct().ToList();
+                var trans = await _db.NameTranslations.Where(t => keys.Contains(t.En)).ToListAsync();
+
+                var outNames = new List<string>(4);
+                foreach (var en in englishKeys)
+                {
+                    var hit = trans.FirstOrDefault(t => t.En == en);
+                    outNames.Add(!string.IsNullOrWhiteSpace(hit?.Gu) ? hit.Gu : en);
+                }
+
+                return new JsonResult(new { success = true, names = outNames });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "ReadBreakerTypesLocalized failed.");
                 return new JsonResult(new { success = false, message = ex.Message });
             }
+        }
+
+        // Helper: Read names from PLC
+        private async Task<string[]> ReadBreakerTypesEnAsync()
+        {
+            var n1 = await _slmpService.ReadStringAsync("D4410", 10);
+            var n2 = await _slmpService.ReadStringAsync("D4420", 10);
+            var n3 = await _slmpService.ReadStringAsync("D4430", 10);
+            var n4 = await _slmpService.ReadStringAsync("D4440", 10);
+
+            return new[]
+            {
+                (n1.Content ?? "").TrimEnd('\0').Trim(),
+                (n2.Content ?? "").TrimEnd('\0').Trim(),
+                (n3.Content ?? "").TrimEnd('\0').Trim(),
+                (n4.Content ?? "").TrimEnd('\0').Trim(),
+            };
         }
 
         // Whitelist of whole-word registers we allow writing
@@ -218,14 +226,11 @@ namespace FX5u_Web_HMI_App.Pages
                 PositionAtEmergency = (await _slmpService.ReadInt32Async("D1708")).Content;
 
                 // English names for initial render
-                var n1 = await _slmpService.ReadStringAsync("D4410", 10);
-                var n2 = await _slmpService.ReadStringAsync("D4420", 10);
-                var n3 = await _slmpService.ReadStringAsync("D4430", 10);
-                var n4 = await _slmpService.ReadStringAsync("D4440", 10);
-                BreakerTypeName1 = (n1.Content ?? "").TrimEnd('\0');
-                BreakerTypeName2 = (n2.Content ?? "").TrimEnd('\0');
-                BreakerTypeName3 = (n3.Content ?? "").TrimEnd('\0');
-                BreakerTypeName4 = (n4.Content ?? "").TrimEnd('\0');
+                var names = await ReadBreakerTypesEnAsync();
+                BreakerTypeName1 = names[0];
+                BreakerTypeName2 = names[1];
+                BreakerTypeName3 = names[2];
+                BreakerTypeName4 = names[3];
 
                 ConnectionStatus = "Connected";
                 ErrorMessage = string.Empty;

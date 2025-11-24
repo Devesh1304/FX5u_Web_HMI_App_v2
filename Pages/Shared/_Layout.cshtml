@@ -1,4 +1,14 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Localization
+@using Microsoft.AspNetCore.Mvc.Localization
+@inject IViewLocalizer Localizer
+
+@{
+    // 1. Detect current language so the dropdown shows the correct selection
+    var requestCulture = Context.Features.Get<IRequestCultureFeature>();
+    var currentCulture = requestCulture?.RequestCulture.UICulture.Name ?? "en-US";
+}
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -8,13 +18,22 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/FX5u_Web_HMI_App.styles.css" asp-append-version="true" />
 
-    <!-- Styling for the new language selector -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Gujarati:wght@400;600&display=swap" rel="stylesheet" />
+
     <style>
+        body {
+            /* Ensure Gujarati font is available globally */
+            font-family: 'Segoe UI', 'Noto Sans Gujarati', sans-serif;
+        }
+
         .language-switcher {
             text-align: right;
             padding: 10px;
             background-color: #f8f9fa; /* A light background */
             border-bottom: 1px solid #dee2e6;
+            display: flex; /* Added flex to align items nicely */
+            justify-content: flex-end;
+            align-items: center;
         }
 
             .language-switcher label {
@@ -27,34 +46,51 @@
                 border-radius: 5px;
                 padding: 5px;
                 border: 1px solid #ced4da;
+                cursor: pointer;
             }
     </style>
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
 
-
+    <div class="language-switcher">
+        <label for="langSelect">@Localizer["Language"]:</label>
+        <select id="langSelect" onchange="setLanguage(this.value)">
+            <!option value="en-US" @(currentCulture == "en-US" ? "selected" : "")>English</!option>
+            <!option value="gu-IN" @(currentCulture == "gu-IN" ? "selected" : "")>ગુજરાતી</!option>
+        </select>
+    </div>
 
     <main class="container-fluid" role="main">
         @RenderBody()
     </main>
 
-    <!-- Your script files are in the correct order -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
 
+    <script>
+        function setLanguage(culture) {
+            // Set ASP.NET Core Culture Cookie
+            document.cookie = ".AspNetCore.Culture=c=" + culture + "|uic=" + culture + ";path=/;max-age=31536000";
+
+            // Optional: Save to LocalStorage for client-side JS checks
+            try { localStorage.setItem('hmi_lang', culture === 'gu-IN' ? 'gu' : 'en'); } catch(e) {}
+
+            // Reload page to apply changes
+            location.reload();
+        }
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 
-    <!-- Your existing Alarm Modal is correctly placed here -->
     <div id="alarmModal" class="modal">
         <div class="modal-content">
             <span class="close-button">&times;</span>
             <h2 id="modalTitle" class="modal-title">ALARM</h2>
             <p id="modalMessage" class="modal-text"></p>
 
-            <!-- This display is needed by your site.js file -->
             <div class="error-code-display">
                 <span class="error-code-label">Alarm Code:</span>
                 <span id="alarmCodeValue" class="error-code-value">0</span>

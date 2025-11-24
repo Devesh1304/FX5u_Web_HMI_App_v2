@@ -1,13 +1,15 @@
 ﻿@page
 @model FX5u_Web_HMI_App.Pages.IndexModel
+@using Microsoft.AspNetCore.Mvc.Localization
+@inject IViewLocalizer Localizer
 @{
-    ViewData["Title"] = "Home Screen";
+    ViewData["Title"] = Localizer["Home Screen"];
 }
 
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Gujarati:wght@400;600&display=swap" rel="stylesheet" />
 
 <style>
-    /* --- Your Existing Styles (with a Gujarati-capable font added) --- */
+    /* --- Your Existing Styles --- */
     body {
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, 'Noto Sans Gujarati', sans-serif;
         background-color: #e9ecef;
@@ -172,37 +174,18 @@
         #header-home-link:hover h1 {
             color: #0056b3;
         }
-
-    .lang-row {
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-        margin: 10px 0;
-        align-items: center;
-    }
 </style>
 
 <div class="container text-center">
-    <a id="header-home-link"><h1>Home Screen</h1></a>
-    <h2>CIRCUIT BREAKER REMOTE RACKING SYSTEM</h2>
+    <a id="header-home-link"><h1>@Localizer["Home Screen"]</h1></a>
+    <h2>@Localizer["CIRCUIT BREAKER REMOTE RACKING SYSTEM"]</h2>
     @Html.AntiForgeryToken()
 
     <div class="status-message" id="connectionStatus"></div>
     <div class="error-message" id="errorMessage" style="display: none;"></div>
 
-    <!-- Language selector -->
-    <div class="lang-row">
-        <label><strong>Language:</strong></label>
-        <select id="langSelect" style="width:160px;">
-            <option value="en">English</option>
-            <option value="gu">ગુજરાતી</option>
-        </select>
-    </div>
-
-    <!-- === START OF ZONES === -->
-
     <div class="zone">
-        <h3>BRAKER TYPE SELECTION</h3>
+        <h3>@Localizer["BREAKER TYPE SELECTION"]</h3>
         <div class="zone-grid-4">
             <div class="hmi-lamp" id="btn-abb-vd4"><span id="BreakerTypeName1"></span></div>
             <div class="hmi-lamp" id="btn-abb"><span id="BreakerTypeName2"></span></div>
@@ -212,43 +195,37 @@
     </div>
 
     <div class="zone">
-        <h3>BRAKER POSITION SELECTION</h3>
+        <h3>@Localizer["BREAKER POSITION SELECTION"]</h3>
         <div class="position-selection-grid">
-            <button class="hmi-btn hmi-interactive-btn" id="btn-in-start">IN START</button>
-            <button class="hmi-btn hmi-interactive-btn" id="btn-out-start">OUT START</button>
+            <button class="hmi-btn hmi-interactive-btn" id="btn-in-start">@Localizer["IN START"]</button>
+            <button class="hmi-btn hmi-interactive-btn" id="btn-out-start">@Localizer["OUT START"]</button>
             <div class="position-display-item">
-                <label style="padding: 0 10px;">POSITION AT EMG. (mm):</label>
+                <label style="padding: 0 10px;">@Localizer["POSITION AT EMG. (mm):"]</label>
                 <span class="read-only-value" id="PositionAtEmergency"></span>
             </div>
         </div>
     </div>
 
     <div class="zone">
-        <h3>INTERLOCKS</h3>
+        <h3>@Localizer["INTERLOCKS"]</h3>
         <div class="zone-grid-3">
-            <button class="hmi-btn hmi-interactive-btn" id="btn-brk-on">BRAKER</button>
-            <button class="hmi-btn hmi-interactive-btn" id="btn-trolley">TROLLEY BRAKES APPLIED</button>
-            <button class="hmi-btn hmi-interactive-btn" id="btn-person">PERSON IN SAFE ZONE</button>
+            <button class="hmi-btn hmi-interactive-btn" id="btn-brk-on">@Localizer["BREAKER"]</button>
+            <button class="hmi-btn hmi-interactive-btn" id="btn-trolley">@Localizer["TROLLEY BRAKES APPLIED"]</button>
+            <button class="hmi-btn hmi-interactive-btn" id="btn-person">@Localizer["PERSON IN SAFE ZONE"]</button>
         </div>
     </div>
 
     <div class="zone">
         <h3>---------------------</h3>
         <div class="zone-grid-3">
-            <button class="hmi-btn hmi-interactive-btn" id="btn-emg">EMERGENCY</button>
-            <button class="btn-blue hmi-btn hmi-interactive-btn" id="btn-main">MAIN</button>
-            <button class="btn-blue hmi-btn hmi-interactive-btn" id="btn-jog">JOG SELECTION</button>
-            <button class="btn-blue hmi-btn hmi-interactive-btn" id="btn-brk-pos">BREAKER POSITION</button>
-            <button class="btn-blue hmi-btn hmi-interactive-btn" id="btn-brk-sel">BREAKER SELECTION</button>
-            <button class="btn-blue hmi-btn hmi-interactive-btn" id="btn-history">TREND GRAPH</button>
+            <button class="hmi-btn hmi-interactive-btn" id="btn-emg">@Localizer["EMERGENCY"]</button>
+            <button class="btn-blue hmi-btn hmi-interactive-btn" id="btn-main">@Localizer["MAIN"]</button>
+            <button class="btn-blue hmi-btn hmi-interactive-btn" id="btn-jog">@Localizer["JOG SELECTION"]</button>
+            <button class="btn-blue hmi-btn hmi-interactive-btn" id="btn-brk-pos">@Localizer["BREAKER POSITION"]</button>
+            <button class="btn-blue hmi-btn hmi-interactive-btn" id="btn-brk-sel">@Localizer["BREAKER SELECTION"]</button>
+            <button class="btn-blue hmi-btn hmi-interactive-btn" id="btn-history">@Localizer["TREND GRAPH"]</button>
         </div>
     </div>
-
-    <!-- === END OF ZONES === -->
-    <div id="signalStatus" style="font-size: 1.05em; font-weight: 600; margin-top:8px;">
-        Checking network...
-    </div>
-
 
     <div class="write-status" id="writeStatusMessage"></div>
 </div>
@@ -256,394 +233,327 @@
 @section Scripts {
     <script>
         const writeStatusMessageDiv = document.getElementById('writeStatusMessage');
-        const langSelect = document.getElementById('langSelect');
+        const langSelect = document.getElementById('langSelect'); // Gets ID from _Layout.cshtml
+
         const THRESHOLD_EXCELLENT = 50;
         const THRESHOLD_GOOD = 150;
         const THRESHOLD_WEAK = 500;
 
-       const latencyElementId = 'signalStatus';
-
-        async function checkLatency() {
-          const url = '/api/LatencyCheck/ping';
-          const start = performance.now();
-          try {
-            // Prevent cached responses
-            const resp = await fetch(url, { method: 'GET', cache: 'no-store' });
-            if (!resp.ok) throw new Error('HTTP ' + resp.status);
-            const end = performance.now();
-            const rtt = Math.round(end - start);
-            updateLatencyUI(rtt);
-          } catch (err) {
-            console.error('Latency check failed:', err);
-            // use a sentinel high value for offline/failed state
-            updateLatencyUI(9999);
-          }
-        }
-
-              function updateLatencyUI(rtt) {
-          const el = document.getElementById(latencyElementId);
-          if (!el) return;
-
-          let status = 'Unknown';
-          let color = 'gray';
-
-          if (rtt < THRESHOLD_EXCELLENT) {
-            status = '🟢 EXCELLENT';
-            color = 'green';
-          } else if (rtt < THRESHOLD_GOOD) {
-            status = '🟡 GOOD';
-            color = 'gold';
-          } else if (rtt < THRESHOLD_WEAK) {
-            status = '🟠 WEAK';
-            color = 'orange';
-          } else {
-            status = '🔴 CRITICAL/OFFLINE';
-            color = 'red';
-          }
-
-          el.innerText = `${status} (${rtt} ms)`;
-          el.style.color = color;
-        }
-
-
+        // Local Storage check for language persistence
         try {
-          const savedLang = localStorage.getItem('hmi_lang'); // 'en' or 'gu'
-          if (langSelect && savedLang && (savedLang === 'en' || savedLang === 'gu')) {
-            langSelect.value = savedLang;
-          }
-        } catch (e) {
-          console.warn('localStorage read failed', e);
-        }
-
+            const savedLang = localStorage.getItem('hmi_lang');
+            if (langSelect && savedLang && (savedLang === 'en' || savedLang.indexOf('gu') !== -1)) {
+                if(langSelect.value !== savedLang) langSelect.value = savedLang;
+            }
+        } catch (e) { console.warn('localStorage read failed', e); }
 
         const writableRegisterIds = [];
         let registerValues = { D4:0, D1001:0, D1002:0, D1402:0, D2:0, D3:0, D5:0 };
 
         const readOnlyRegisterIds = [
-          "PositionAtEmergency",
-          "BreakerTypeName1","BreakerTypeName2","BreakerTypeName3","BreakerTypeName4"
+            "PositionAtEmergency",
+            "BreakerTypeName1","BreakerTypeName2","BreakerTypeName3","BreakerTypeName4"
         ];
-
-        const fieldsToDivideBy10 = ["PositionAtEmergency"];
-        const fieldsToDivideBy10timer = [];
 
         /* ==================== BREAKER NAME REFRESH (EN↔GU) ==================== */
         async function refreshBreakerNames() {
-          try {
-            const handler = (langSelect && langSelect.value === 'gu')
-              ? 'ReadBreakerTypesLocalized&lang=gu'
-              : 'ReadBreakerTypes';
-            const res = await fetch(`?handler=${handler}`);
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const j = await res.json();
-            if (!j.success) return;
+            try {
+                // Check if language contains "gu" (handles 'gu' or 'gu-IN')
+                const currentLang = (langSelect && langSelect.value.indexOf('gu') !== -1) ? 'gu' : 'en';
 
-            const names = j.names || [];
-            document.getElementById('BreakerTypeName1').textContent = names[0] || '';
-            document.getElementById('BreakerTypeName2').textContent = names[1] || '';
-            document.getElementById('BreakerTypeName3').textContent = names[2] || '';
-            document.getElementById('BreakerTypeName4').textContent = names[3] || '';
-          } catch (e) {
-            console.error("Breaker name refresh error:", e);
-          }
-        }
+                const handler = (currentLang === 'gu')
+                    ? 'ReadBreakerTypesLocalized&lang=gu'
+                    : 'ReadBreakerTypes';
 
-        /* ==================== BUTTON CONFIG ==================== */
-        const buttonConfig = {
-          'btn-abb-vd4': { actions: [], statusBit: { register: 'D1001', position: 0 } },
-          'btn-abb':     { actions: [], statusBit: { register: 'D1001', position: 1 } },
-          'btn-spare3':  { actions: [], statusBit: { register: 'D1001', position: 2 } },
-          'btn-spare4':  { actions: [], statusBit: { register: 'D1001', position: 3 } },
+                const res = await fetch(`?handler=${handler}`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const j = await res.json();
+                if (!j.success) return;
 
-          'btn-in-start': {
-            actions: [
-              { type: 'toggle', register: 'D1001', position: 5 },
-              { type: 'reset',  register: 'D4',    position: 1 },
-              { type: 'reset',  register: 'D4',    position: 0 },
-            ],
-            visibilityBit: { register: 'D1001', position: 6 },
-            conditionBit:  { register: 'D1001', position: 7 },
-            conditionBehavior: 'allowOnHigh'
-          },
-          'btn-out-start': {
-            actions: [
-              { type: 'toggle', register: 'D1001', position: 6 },
-              { type: 'reset',  register: 'D4',    position: 1 },
-              { type: 'reset',  register: 'D4',    position: 0 },
-            ],
-            visibilityBit: { register: 'D1001', position: 5 },
-            conditionBit:  { register: 'D1001', position: 7 },
-            conditionBehavior: 'allowOnHigh'
-          },
-
-          'btn-emg': {
-            actions: [
-              { type: 'toggle', register: 'D1002', position: 0 },
-              { type: 'reset',  register: 'D1402', position: 0 },
-              { type: 'reset',  register: 'D1402', position: 1 },
-              { type: 'reset',  register: 'D1402', position: 2 },
-              { type: 'reset',  register: 'D1402', position: 3 },
-              { type: 'reset',  register: 'D1402', position: 4 },
-            ],
-            momentarySideEffect: { address: 'M501' }
-          },
-
-          'btn-brk-on': {
-            actions: [{ type: 'toggle', register: 'D2', position: 3 }],
-            conditionBit: { register: 'D3', position: 5 },
-            conditionBehavior: 'allowOnHigh'
-          },
-          'btn-trolley': {
-            actions: [{ type: 'toggle', register: 'D2', position: 5 }],
-            visibilityBit: { register: 'D1001', position: 1 },
-            conditionBit:  { register: 'D5',    position: 1 },
-            conditionBehavior: 'allowOnHigh'
-          },
-
-          'btn-main': { actions: [], conditionBit: { register: 'D3', position: 0 }, conditionBehavior: 'allowOnHigh', redirect: '/MainScreen' },
-          'btn-jog':  { actions: [], redirect: '/JogMode' },
-          'btn-person': {
-            actions: [{ type: 'toggle', register: 'D2', position: 6 }],
-            conditionBit: { register: 'D5', position: 2 },
-            conditionBehavior: 'allowOnHigh'
-          },
-          'btn-brk-pos': { actions: [], redirect: '/Actuator' },
-          'btn-history': { actions: [], redirect: '/History' },
-          'btn-brk-sel': { actions: [], redirect: '/BrakerSelect' },
-        };
-
-        /* ==================== ACTION ENGINE (restored) ==================== */
-        async function performActionsAndAwait(actions) {
-          const registersToUpdate = new Map();
-          for (const action of actions) {
-            if (action.type === 'momentary') continue;
-            const reg = action.register;
-            let current = registersToUpdate.has(reg) ? registersToUpdate.get(reg) : registerValues[reg];
-            if (action.type === 'toggle') current ^= (1 << action.position);
-            else if (action.type === 'set') current |= (1 << action.position);
-            else if (action.type === 'reset') current &= ~(1 << action.position);
-            registersToUpdate.set(reg, current);
-          }
-          const writes = [];
-          for (const [r, val] of registersToUpdate)
-            writes.push(writeRegister(r, val.toString()));
-          return Promise.all(writes);
-        }
-
-        function updateButtonStyles() {
-          for (const buttonId in buttonConfig) {
-            const cfg = buttonConfig[buttonId];
-            const button = document.getElementById(buttonId);
-            if (!button) continue;
-
-            // Indicator-only buttons
-            if (cfg.statusBit) {
-              const isOn = (registerValues[cfg.statusBit.register] >> cfg.statusBit.position) & 1;
-              button.classList.toggle('btn-green', !!isOn);
-              button.classList.toggle('btn-red',  !isOn);
+                const names = j.names || [];
+                document.getElementById('BreakerTypeName1').textContent = names[0] || '';
+                document.getElementById('BreakerTypeName2').textContent = names[1] || '';
+                document.getElementById('BreakerTypeName3').textContent = names[2] || '';
+                document.getElementById('BreakerTypeName4').textContent = names[3] || '';
+            } catch (e) {
+                console.error("Breaker name refresh error:", e);
             }
-            // Action buttons: color by first toggle/momentary action bit if present, else default red
-            else if (cfg.actions && cfg.actions.length > 0) {
-              const a = cfg.actions.find(x => x.type === 'toggle' || x.type === 'momentary');
-              if (a) {
-                const isOn = (registerValues[a.register] >> a.position) & 1;
-                button.classList.toggle('btn-green', !!isOn);
-                button.classList.toggle('btn-red',  !isOn);
-              } else {
-                button.classList.remove('btn-green');
-                button.classList.add('btn-red');
-              }
-            }
-
-            // Visibility guard
-            if (cfg.visibilityBit) {
-              const v = (registerValues[cfg.visibilityBit.register] >> cfg.visibilityBit.position) & 1;
-              button.style.visibility = v ? 'hidden' : 'visible';
-            }
-          }
         }
 
         /* ==================== UI UPDATE ==================== */
         function updateUI(data) {
-          const statusDiv = document.getElementById('connectionStatus');
-          const errorDiv  = document.getElementById('errorMessage');
+            const statusDiv = document.getElementById('connectionStatus');
+            const errorDiv  = document.getElementById('errorMessage');
 
-          statusDiv.className = `status-message ${data.connectionStatus.includes('Connected') ? 'status-connected' : 'status-disconnected'}`;
-          errorDiv.style.display = data.errorMessage ? 'block' : 'none';
-          errorDiv.innerHTML = data.errorMessage ? `<strong>Error:</strong> ${data.errorMessage}` : '';
-          statusDiv.textContent = `Connection Status: ${data.connectionStatus}`;
+            statusDiv.className = `status-message ${data.connectionStatus.includes('Connected') ? 'status-connected' : 'status-disconnected'}`;
+            errorDiv.style.display = data.errorMessage ? 'block' : 'none';
+            errorDiv.innerHTML = data.errorMessage ? `<strong>Error:</strong> ${data.errorMessage}` : '';
+            statusDiv.textContent = `Connection Status: ${data.connectionStatus}`;
 
-          // Read-only spans
-          readOnlyRegisterIds.forEach(id => {
-            const span = document.getElementById(id);
-            const dataKey = id.charAt(0).toLowerCase() + id.slice(1);
-            if (!span || data[dataKey] === undefined) return;
+            readOnlyRegisterIds.forEach(id => {
+                const span = document.getElementById(id);
+                const dataKey = id.charAt(0).toLowerCase() + id.slice(1);
+                if (!span || data[dataKey] === undefined) return;
 
-            // Don’t overwrite Gujarati labels while Gujarati selected
-            if (id.startsWith("BreakerTypeName") && langSelect && langSelect.value === 'gu') return;
+                // --- FIX IS HERE ---
+                // Correctly detect 'gu-IN' or 'gu' to prevent overwriting with English
+                if (id.startsWith("BreakerTypeName") && langSelect && langSelect.value.indexOf('gu') !== -1) {
+                    return; // STOP here, let refreshBreakerNames handle this field
+                }
+                // -------------------
 
-            if (id === 'PositionAtEmergency') {
-              const raw = data[dataKey];
-              span.textContent = (raw / 440.0).toFixed(1);
-            } else {
-              span.textContent = data[dataKey];
+                if (id === 'PositionAtEmergency') {
+                    const raw = data[dataKey];
+                    span.textContent = (raw / 440.0).toFixed(1);
+                } else {
+                    span.textContent = data[dataKey];
+                }
+            });
+
+            for (const key in registerValues) {
+                const dk = key.charAt(0).toLowerCase() + key.slice(1);
+                if (data[dk] !== undefined) registerValues[key] = data[dk];
             }
-          });
+            updateButtonStyles();
+        }
 
-          // Cache raw register words
-          for (const key in registerValues) {
-            const dk = key.charAt(0).toLowerCase() + key.slice(1);
-            if (data[dk] !== undefined) registerValues[key] = data[dk];
-          }
+        /* ==================== BUTTON CONFIG ==================== */
+        const buttonConfig = {
+            'btn-abb-vd4': { actions: [], statusBit: { register: 'D1001', position: 0 } },
+            'btn-abb':     { actions: [], statusBit: { register: 'D1001', position: 1 } },
+            'btn-spare3':  { actions: [], statusBit: { register: 'D1001', position: 2 } },
+            'btn-spare4':  { actions: [], statusBit: { register: 'D1001', position: 3 } },
 
-          updateButtonStyles();
+            'btn-in-start': {
+                actions: [
+                    { type: 'toggle', register: 'D1001', position: 5 },
+                    { type: 'reset',  register: 'D4',    position: 1 },
+                    { type: 'reset',  register: 'D4',    position: 0 },
+                ],
+                visibilityBit: { register: 'D1001', position: 6 },
+                conditionBit:  { register: 'D1001', position: 7 },
+                conditionBehavior: 'allowOnHigh'
+            },
+            'btn-out-start': {
+                actions: [
+                    { type: 'toggle', register: 'D1001', position: 6 },
+                    { type: 'reset',  register: 'D4',    position: 1 },
+                    { type: 'reset',  register: 'D4',    position: 0 },
+                ],
+                visibilityBit: { register: 'D1001', position: 5 },
+                conditionBit:  { register: 'D1001', position: 7 },
+                conditionBehavior: 'allowOnHigh'
+            },
+            'btn-emg': {
+                actions: [
+                    { type: 'toggle', register: 'D1002', position: 0 },
+                    { type: 'reset',  register: 'D1402', position: 0 },
+                    { type: 'reset',  register: 'D1402', position: 1 },
+                    { type: 'reset',  register: 'D1402', position: 2 },
+                    { type: 'reset',  register: 'D1402', position: 3 },
+                    { type: 'reset',  register: 'D1402', position: 4 },
+                ],
+                momentarySideEffect: { address: 'M501' }
+            },
+            'btn-brk-on': {
+                actions: [{ type: 'toggle', register: 'D2', position: 3 }],
+                conditionBit: { register: 'D3', position: 5 },
+                conditionBehavior: 'allowOnHigh'
+            },
+            'btn-trolley': {
+                actions: [{ type: 'toggle', register: 'D2', position: 5 }],
+                visibilityBit: { register: 'D1001', position: 1 },
+                conditionBit:  { register: 'D5',    position: 1 },
+                conditionBehavior: 'allowOnHigh'
+            },
+            'btn-main':    { actions: [], conditionBit: { register: 'D3', position: 0 }, conditionBehavior: 'allowOnHigh', redirect: '/MainScreen' },
+            'btn-jog':     { actions: [], redirect: '/JogMode' },
+            'btn-person': {
+                actions: [{ type: 'toggle', register: 'D2', position: 6 }],
+                conditionBit: { register: 'D5', position: 2 },
+                conditionBehavior: 'allowOnHigh'
+            },
+            'btn-brk-pos': { actions: [], redirect: '/Actuator' },
+            'btn-history': { actions: [], redirect: '/History' },
+            'btn-brk-sel': { actions: [], redirect: '/BrakerSelect' },
+        };
+
+        async function performActionsAndAwait(actions) {
+            const registersToUpdate = new Map();
+            for (const action of actions) {
+                if (action.type === 'momentary') continue;
+                const reg = action.register;
+                let current = registersToUpdate.has(reg) ? registersToUpdate.get(reg) : registerValues[reg];
+                if (action.type === 'toggle') current ^= (1 << action.position);
+                else if (action.type === 'set') current |= (1 << action.position);
+                else if (action.type === 'reset') current &= ~(1 << action.position);
+                registersToUpdate.set(reg, current);
+            }
+            const writes = [];
+            for (const [r, val] of registersToUpdate)
+                writes.push(writeRegister(r, val.toString()));
+            return Promise.all(writes);
+        }
+
+        function updateButtonStyles() {
+            for (const buttonId in buttonConfig) {
+                const cfg = buttonConfig[buttonId];
+                const button = document.getElementById(buttonId);
+                if (!button) continue;
+
+                if (cfg.statusBit) {
+                    const isOn = (registerValues[cfg.statusBit.register] >> cfg.statusBit.position) & 1;
+                    button.classList.toggle('btn-green', !!isOn);
+                    button.classList.toggle('btn-red',  !isOn);
+                } else if (cfg.actions && cfg.actions.length > 0) {
+                    const a = cfg.actions.find(x => x.type === 'toggle' || x.type === 'momentary');
+                    if (a) {
+                        const isOn = (registerValues[a.register] >> a.position) & 1;
+                        button.classList.toggle('btn-green', !!isOn);
+                        button.classList.toggle('btn-red',  !isOn);
+                    } else {
+                        button.classList.remove('btn-green');
+                        button.classList.add('btn-red');
+                    }
+                }
+                if (cfg.visibilityBit) {
+                    const v = (registerValues[cfg.visibilityBit.register] >> cfg.visibilityBit.position) & 1;
+                    button.style.visibility = v ? 'hidden' : 'visible';
+                }
+            }
         }
 
         async function fetchModbusData() {
-          try {
-            const response = await fetch('?handler=ReadRegisters');
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            const data = await response.json();
-            updateUI(data);
-          } catch (error) {
-            updateUI({ connectionStatus: "Fetch Error", errorMessage: error.message });
-          }
+            try {
+                const response = await fetch('?handler=ReadRegisters');
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json();
+                updateUI(data);
+            } catch (error) {
+                updateUI({ connectionStatus: "Fetch Error", errorMessage: error.message });
+            }
         }
 
         async function writeRegister(name, value) {
-          writeStatusMessageDiv.textContent = `Sending new value for ${name}...`;
-          writeStatusMessageDiv.className = 'write-status';
-          try {
-            const res = await fetch(`?handler=WriteRegister`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-              },
-              body: JSON.stringify({ RegisterName: name, Value: value })
-            });
-            if (!res.ok) throw new Error(`Server responded ${res.status}`);
-            const j = await res.json();
-            writeStatusMessageDiv.textContent = j.message;
-            writeStatusMessageDiv.className = `write-status ${j.status.toLowerCase()}`;
-          } catch (err) {
-            writeStatusMessageDiv.textContent = `Write failed: ${err.message}`;
-            writeStatusMessageDiv.className = 'write-status error';
-          }
+            writeStatusMessageDiv.textContent = `Sending new value for ${name}...`;
+            writeStatusMessageDiv.className = 'write-status';
+            try {
+                const res = await fetch(`?handler=WriteRegister`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify({ RegisterName: name, Value: value })
+                });
+                if (!res.ok) throw new Error(`Server responded ${res.status}`);
+                const j = await res.json();
+                writeStatusMessageDiv.textContent = j.message;
+                writeStatusMessageDiv.className = `write-status ${j.status.toLowerCase()}`;
+            } catch (err) {
+                writeStatusMessageDiv.textContent = `Write failed: ${err.message}`;
+                writeStatusMessageDiv.className = 'write-status error';
+            }
         }
 
         async function writeBit(address, value) {
-          try {
-            await fetch(`?handler=WriteBit`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-              },
-              body: JSON.stringify({ Address: address, Value: value })
-            });
-          } catch (e) {
-            console.error('Write bit failed', e);
-          }
+            try {
+                await fetch(`?handler=WriteBit`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify({ Address: address, Value: value })
+                });
+            } catch (e) { console.error('Write bit failed', e); }
         }
 
-        /* ==================== EVENT BINDINGS (restored) ==================== */
         document.addEventListener('DOMContentLoaded', () => {
-          // Header link
-          const headerHomeLink = document.getElementById('header-home-link');
-          if (headerHomeLink) headerHomeLink.addEventListener('click', () => window.location.href = '/BrakerNames');
+            const headerHomeLink = document.getElementById('header-home-link');
+            if (headerHomeLink) headerHomeLink.addEventListener('click', () => window.location.href = '/BrakerNames');
 
-          // Interactive buttons (click + momentary + side effect)
-          document.querySelectorAll('.hmi-interactive-btn').forEach(button => {
-            const cfg = buttonConfig[button.id];
-            if (!cfg) return;
+            document.querySelectorAll('.hmi-interactive-btn').forEach(button => {
+                const cfg = buttonConfig[button.id];
+                if (!cfg) return;
 
-            const isPrimaryMomentary = cfg.actions && cfg.actions.some(a => a.type === 'momentary');
+                const isPrimaryMomentary = cfg.actions && cfg.actions.some(a => a.type === 'momentary');
 
-            if (isPrimaryMomentary) {
-              const a = cfg.actions.find(x => x.type === 'momentary');
-
-              const pressAction = async () => {
-                if (cfg.conditionBit) {
-                  const bit = (registerValues[cfg.conditionBit.register] >> cfg.conditionBit.position) & 1;
-                  const allow = cfg.conditionBehavior === 'allowOnHigh' ? !!bit : !bit;
-                  if (!allow) {
-                    writeStatusMessageDiv.textContent = `Action for ${button.id} prevented: Condition not met.`;
-                    writeStatusMessageDiv.className = 'write-status error';
-                    button.setAttribute('data-is-blocked', 'true');
-                    return;
-                  }
+                if (isPrimaryMomentary) {
+                    const a = cfg.actions.find(x => x.type === 'momentary');
+                    const pressAction = async () => {
+                        if (cfg.conditionBit) {
+                            const bit = (registerValues[cfg.conditionBit.register] >> cfg.conditionBit.position) & 1;
+                            const allow = cfg.conditionBehavior === 'allowOnHigh' ? !!bit : !bit;
+                            if (!allow) {
+                                writeStatusMessageDiv.textContent = `Action for ${button.id} prevented: Condition not met.`;
+                                writeStatusMessageDiv.className = 'write-status error';
+                                button.setAttribute('data-is-blocked', 'true');
+                                return;
+                            }
+                        }
+                        button.setAttribute('data-is-blocked', 'false');
+                        const newVal = registerValues[a.register] | (1 << a.position);
+                        await writeRegister(a.register, newVal.toString());
+                        await fetchModbusData();
+                    };
+                    const releaseAction = async () => {
+                        if (button.getAttribute('data-is-blocked') === 'true') return;
+                        const newVal = registerValues[a.register] & ~(1 << a.position);
+                        await writeRegister(a.register, newVal.toString());
+                        await fetchModbusData();
+                    };
+                    button.addEventListener('mousedown', pressAction);
+                    button.addEventListener('mouseup', releaseAction);
+                    button.addEventListener('mouseleave', releaseAction);
+                    button.addEventListener('touchstart', (e) => { e.preventDefault(); pressAction(); });
+                    button.addEventListener('touchend',   (e) => { e.preventDefault(); releaseAction(); });
+                } else {
+                    button.addEventListener('click', async () => {
+                        try {
+                            if (cfg.conditionBit) {
+                                const bit = (registerValues[cfg.conditionBit.register] >> cfg.conditionBit.position) & 1;
+                                const allow = cfg.conditionBehavior === 'allowOnHigh' ? !!bit : !bit;
+                                if (!allow) {
+                                    writeStatusMessageDiv.textContent = `Action for ${button.id} prevented: Condition not met.`;
+                                    writeStatusMessageDiv.className = 'write-status error';
+                                    return;
+                                }
+                            }
+                            await performActionsAndAwait(cfg.actions || []);
+                            await fetchModbusData();
+                            if (cfg.redirect) window.location.href = cfg.redirect;
+                        } catch (err) {
+                            console.error("Write failed:", err);
+                            writeStatusMessageDiv.textContent = `Error: ${err.message}`;
+                            writeStatusMessageDiv.className = 'write-status error';
+                        }
+                    });
                 }
-                button.setAttribute('data-is-blocked', 'false');
-                const newVal = registerValues[a.register] | (1 << a.position);
-                await writeRegister(a.register, newVal.toString());
-                await fetchModbusData();
-              };
 
-              const releaseAction = async () => {
-                if (button.getAttribute('data-is-blocked') === 'true') return;
-                const newVal = registerValues[a.register] & ~(1 << a.position);
-                await writeRegister(a.register, newVal.toString());
-                await fetchModbusData();
-              };
-
-              button.addEventListener('mousedown', pressAction);
-              button.addEventListener('mouseup', releaseAction);
-              button.addEventListener('mouseleave', releaseAction);
-              button.addEventListener('touchstart', (e) => { e.preventDefault(); pressAction(); });
-              button.addEventListener('touchend',   (e) => { e.preventDefault(); releaseAction(); });
-
-            } else {
-              button.addEventListener('click', async () => {
-                try {
-                  if (cfg.conditionBit) {
-                    const bit = (registerValues[cfg.conditionBit.register] >> cfg.conditionBit.position) & 1;
-                    const allow = cfg.conditionBehavior === 'allowOnHigh' ? !!bit : !bit;
-                    if (!allow) {
-                      writeStatusMessageDiv.textContent = `Action for ${button.id} prevented: Condition not met.`;
-                      writeStatusMessageDiv.className = 'write-status error';
-                      return;
-                    }
-                  }
-                  await performActionsAndAwait(cfg.actions || []);
-                  await fetchModbusData();
-                  if (cfg.redirect) window.location.href = cfg.redirect;
-                } catch (err) {
-                  console.error("Write failed:", err);
-                  writeStatusMessageDiv.textContent = `Error: ${err.message}`;
-                  writeStatusMessageDiv.className = 'write-status error';
+                if (cfg.momentarySideEffect) {
+                    const addr = cfg.momentarySideEffect.address;
+                    const press = async () => { await writeBit(addr, true);  await fetchModbusData(); };
+                    const release = async () => { await writeBit(addr, false); await fetchModbusData(); };
+                    button.addEventListener('mousedown', press);
+                    button.addEventListener('mouseup',   release);
+                    button.addEventListener('mouseleave',release);
+                    button.addEventListener('touchstart',(e) => { e.preventDefault(); press(); });
+                    button.addEventListener('touchend',  (e) => { e.preventDefault(); release(); });
                 }
-              });
-            }
+            });
 
-            if (cfg.momentarySideEffect) {
-              const addr = cfg.momentarySideEffect.address;
-              const press = async () => { await writeBit(addr, true);  await fetchModbusData(); };
-              const release = async () => { await writeBit(addr, false); await fetchModbusData(); };
-
-              button.addEventListener('mousedown', press);
-              button.addEventListener('mouseup',   release);
-              button.addEventListener('mouseleave',release);
-              button.addEventListener('touchstart',(e) => { e.preventDefault(); press(); });
-              button.addEventListener('touchend',  (e) => { e.preventDefault(); release(); });
-            }
-          });
-
-          // Initial loads & timers
-          fetchModbusData();
-          refreshBreakerNames();
-               //checkLatency();
-          setInterval(fetchModbusData, 1000);
-          setInterval(refreshBreakerNames, 2000);
-
-        //setInterval(checkLatency, 3000);
-        if (langSelect) {
-          langSelect.addEventListener('change', () => {
-            try { localStorage.setItem('hmi_lang', langSelect.value); } catch(e) { /* ignore */ }
+            fetchModbusData();
             refreshBreakerNames();
-          });
-        }
+            setInterval(fetchModbusData, 1000);
+            setInterval(refreshBreakerNames, 2000);
+
+            if (langSelect) {
+                langSelect.addEventListener('change', () => {
+                    try { localStorage.setItem('hmi_lang', langSelect.value); } catch(e) { /* ignore */ }
+                    refreshBreakerNames();
+                });
+            }
         });
     </script>
 }
-

@@ -4,24 +4,24 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using FX5u_Web_HMI_App.Hubs;
 using FX5u_Web_HMI_App.BackgroundServices;
-// --- USING STATEMENTS FOR DATABASE ---
 using Microsoft.EntityFrameworkCore;
-// --- USING STATEMENTS FOR LOCALIZATION ---
 using System.Globalization;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.Options;
 using FX5u_Web_HMI_App.Data;
-
+// 1. ADD THIS NAMESPACE FOR LOCALIZATION VIEW EXPANDER
+using Microsoft.AspNetCore.Mvc.Razor;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- 1. ADD LOCALIZATION SERVICES ---
+// --- 2. CONFIGURE LOCALIZATION OPTIONS ---
 var supportedCultures = new[]
 {
     new CultureInfo("en-US"), // English (United States)
     new CultureInfo("gu-IN")  // Gujarati (India)
 };
 
+// This registers IStringLocalizerFactory
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 
 builder.Services.Configure<RequestLocalizationOptions>(options =>
@@ -30,11 +30,13 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
     options.SupportedCultures = supportedCultures;
     options.SupportedUICultures = supportedCultures;
 });
-// --- END LOCALIZATION ---
 
-
-// --- 2. ADD OTHER SERVICES ---
-builder.Services.AddRazorPages();
+// --- 3. ADD RAZOR PAGES WITH VIEW LOCALIZATION (CRITICAL FIX) ---
+builder.Services.AddRazorPages()
+    // This line registers IViewLocalizer (Fixes your crash)
+    .AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix)
+    // This allows localizing error messages in Models
+    .AddDataAnnotationsLocalization();
 
 // Add Database Context
 builder.Services.AddDbContext<LogDbContext>(options =>
@@ -45,10 +47,12 @@ builder.Services.AddSingleton<ISLMPService, SLMPService>();
 builder.Services.AddSignalR();
 builder.Services.AddHostedService<PlcMonitorService>();
 
+// If you are using the Safety/Distance check we discussed, enable this:
+// builder.Services.AddSingleton<FX5u_Web_HMI_App.Services.SafetyService>(); 
 
 var app = builder.Build();
 
-// --- 3. CONFIGURE THE HTTP REQUEST PIPELINE ---
+// --- 4. CONFIGURE THE HTTP REQUEST PIPELINE ---
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
@@ -57,19 +61,20 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
 app.UseRouting();
 
-// --- 4. ADD LOCALIZATION MIDDLEWARE ---
-// This must be after UseRouting() and before UseAuthorization()
-app.UseRequestLocalization(app.Services.GetRequiredService<IOptions<RequestLocalizationOptions>>().Value);
-// --- END LOCALIZATION ---
+// --- 5. ADD LOCALIZATION MIDDLEWARE ---
+// Must be AFTER UseRouting() and BEFORE UseAuthorization()
+var locOptions = app.Services.GetRequiredService<IOptions<RequestLocalizationOptions>>();
+app.UseRequestLocalization(locOptions.Value);
 
 app.UseAuthorization();
-app.MapControllers();
+
 app.MapRazorPages();
 app.MapHub<PlcHub>("/plcHub");
 
-// --- 5. AUTOMATICALLY CREATE/UPDATE THE DATABASE ON STARTUP ---
+// --- 6. AUTOMATICALLY CREATE/UPDATE THE DATABASE ON STARTUP ---
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -84,4 +89,5 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "An error occurred while migrating the database.");
     }
 }
+
 app.Run();

@@ -1,53 +1,13 @@
 ﻿@page
 @model FX5u_Web_HMI_App.Pages.MainScreenModel
+@using Microsoft.AspNetCore.Mvc.Localization
+@inject IViewLocalizer Localizer
 @{
-    ViewData["Title"] = "Main Screen";
+    ViewData["Title"] = Localizer["Main Screen"];
 }
+
 <style>
-    .hmi-btn {
-        flex-grow: 1;
-        padding: 15px;
-        font-size: 1.1em;
-        font-weight: bold;
-        color: white;
-        border: 2px solid #343a40;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: background-color 0.3s ease, visibility 0.3s ease;
-    }
-
-    .hmi-container {
-        display: flex;
-        flex-direction: column;
-        height: 100vh;
-        width: 100%;
-        background-color: #000080;
-        color: #FFF;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        overflow: hidden;
-    }
-
-    .btn-green {
-        background-color: #28a745;
-    }
-
-    .btn-red {
-        background-color: #dc3545;
-    }
-
-    .btn-blue {
-        background-color: #007bff;
-    }
-
-    .button-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        grid-template-rows: repeat(2, 1fr);
-        gap: 10px;
-        margin-top: 10px;
-        margin-bottom: 10px;
-    }
-
+    /* --- Styles --- */
     body {
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         background-color: #e9ecef;
@@ -75,19 +35,10 @@
         margin-bottom: 10px;
     }
 
+    /* Toolbar logic moved to Layout, but keeping container spacing */
     .toolbar {
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 10px;
+        display: none;
     }
-
-        .toolbar select {
-            padding: 6px 10px;
-            border: 1px solid #ced4da;
-            border-radius: 6px;
-        }
 
     input[type="number"] {
         text-align: right;
@@ -96,7 +47,6 @@
         border: 1px solid #ced4da;
         border-radius: 5px;
         font-size: 1.05em;
-        box-sizing: border-box;
     }
 
     .status-message {
@@ -174,12 +124,13 @@
             border: 1px solid #c3e6cb;
         }
 
+    /* Bar Graph */
     .bar-graph-container {
         display: flex;
         align-items: center;
         gap: 15px;
         margin-bottom: 10px;
-        transition: background-color 0.3s ease, visibility 0.3s ease;
+        transition: background-color 0.3s ease;
     }
 
     .bar-graph-label {
@@ -223,6 +174,7 @@
         text-align: right;
     }
 
+    /* Zones */
     .zone {
         margin-top: 20px;
         text-align: left;
@@ -242,7 +194,7 @@
         gap: 10px;
     }
 
-    /* Lamp tiles exactly like Index */
+    /* Lamps */
     .hmi-lamp {
         padding: 15px;
         font-size: 1.1em;
@@ -258,17 +210,49 @@
         box-shadow: 0 2px 6px rgba(0,0,0,.08);
     }
 
+    /* Buttons */
+    .hmi-btn {
+        flex-grow: 1;
+        padding: 15px;
+        font-size: 1.1em;
+        font-weight: bold;
+        color: white;
+        border: 2px solid #343a40;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease, visibility 0.3s ease;
+    }
+
+    .btn-green {
+        background-color: #28a745;
+    }
+
+    .btn-red {
+        background-color: #dc3545;
+    }
+
+    .btn-blue {
+        background-color: #007bff;
+    }
+
+    .button-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        grid-template-rows: repeat(2, 1fr);
+        gap: 10px;
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+
+    .main-button-container {
+        display: grid;
+        grid-template-columns: repeat(3,1fr);
+        gap: 10px;
+    }
 </style>
 
 <div class="container text-center">
-    <h1>Main Screen</h1>
-    <div class="toolbar">
-        <label for="langSelect" style="font-weight:600;color:#495057;">Language:</label>
-        <select id="langSelect">
-            <option value="en">English</option>
-            <option value="gu">ગુજરાતી</option>
-        </select>
-    </div>
+    <h1>@Localizer["Main Screen"]</h1>
 
     @Html.AntiForgeryToken()
 
@@ -276,65 +260,56 @@
     <div class="error-message" id="errorMessage" style="display: none;"></div>
 
     <div class="register-list">
-        <div class="register-item"><label>MAX FORWARD TORQUE (%):</label><span class="read-only-value" id="MaxForwardTorque"></span></div>
-        <div class="register-item"><label>MAX REVERSE TORQUE (%):</label><span class="read-only-value" id="MaxReverseTorque"></span></div>
-        <div class="register-item"><label>SERVO ERROR:</label><span class="read-only-value" id="ServoError"></span></div>
-        <div class="register-item"><label for="ContOffTime">CONT OFF TIME:</label><input type="number" id="ContOffTime" /></div>
-        <div class="register-item"><label>INSTANT. TORQUE (%):</label><span class="read-only-value" id="InstantTorque"></span></div>
-        <div class="register-item"><label>TOTAL TRAVEL LENGTH (mm):</label><span class="read-only-value" id="TotalTravelLength"></span></div>
-        <div class="register-item"><label>CURRENT POSITION (mm):</label><span class="read-only-value" id="CurrentPosition"></span></div>
-        <div class="register-item"><label>POSITION AT EMG. (mm):</label><span class="read-only-value" id="PositionAtEmergency"></span></div>
+        <div class="register-item"><label>@Localizer["MAX FORWARD TORQUE (%):"]</label><span class="read-only-value" id="MaxForwardTorque"></span></div>
+        <div class="register-item"><label>@Localizer["MAX REVERSE TORQUE (%):"]</label><span class="read-only-value" id="MaxReverseTorque"></span></div>
+        <div class="register-item"><label>@Localizer["SERVO ERROR:"]</label><span class="read-only-value" id="ServoError"></span></div>
+        <div class="register-item"><label for="ContOffTime">@Localizer["CONT OFF TIME:"]</label><input type="number" id="ContOffTime" /></div>
+        <div class="register-item"><label>@Localizer["INSTANT. TORQUE (%):"]</label><span class="read-only-value" id="InstantTorque"></span></div>
+        <div class="register-item"><label>@Localizer["TOTAL TRAVEL LENGTH (mm):"]</label><span class="read-only-value" id="TotalTravelLength"></span></div>
+        <div class="register-item"><label>@Localizer["CURRENT POSITION (mm):"]</label><span class="read-only-value" id="CurrentPosition"></span></div>
+        <div class="register-item"><label>@Localizer["POSITION AT EMG. (mm):"]</label><span class="read-only-value" id="PositionAtEmergency"></span></div>
     </div>
 
     <div class="zone">
-        <h3>BRAKER TYPE SELECTION</h3>
+        <h3>@Localizer["BREAKER TYPE SELECTION"]</h3>
         <div class="zone-grid-4">
-            <div class="hmi-lamp" id="btn-abb-vd4">
-                <span id="BreakerTypeName1"></span>
-            </div>
-            <div class="hmi-lamp" id="btn-abb">
-                <span id="BreakerTypeName2"></span>
-            </div>
-            <div class="hmi-lamp" id="btn-spare3">
-                <span id="BreakerTypeName3"></span>
-            </div>
-            <div class="hmi-lamp" id="btn-spare4">
-                <span id="BreakerTypeName4"></span>
-            </div>
+            <div class="hmi-lamp" id="btn-abb-vd4"><span id="BreakerTypeName1"></span></div>
+            <div class="hmi-lamp" id="btn-abb"><span id="BreakerTypeName2"></span></div>
+            <div class="hmi-lamp" id="btn-spare3"><span id="BreakerTypeName3"></span></div>
+            <div class="hmi-lamp" id="btn-spare4"><span id="BreakerTypeName4"></span></div>
         </div>
     </div>
 
-
     <div class="button-grid">
-        <button class="hmi-btn hmi-interactive-btn" id="btn-in-start">IN START</button>
-        <button class="hmi-btn hmi-interactive-btn" id="btn-out-start">OUT START</button>
-        <button class="hmi-btn hmi-interactive-btn" id="btn-emg">EMERGENCY</button>
+        <button class="hmi-btn hmi-interactive-btn" id="btn-in-start">@Localizer["IN START"]</button>
+        <button class="hmi-btn hmi-interactive-btn" id="btn-out-start">@Localizer["OUT START"]</button>
+        <button class="hmi-btn hmi-interactive-btn" id="btn-emg">@Localizer["EMERGENCY"]</button>
     </div>
 
     <div class="bar-graph-container" id="rackingInContainer">
-        <span class="bar-graph-label">RACKING IN:</span>
+        <span class="bar-graph-label">@Localizer["RACKING IN:"]</span>
         <div class="bar-graph-track"><div class="bar-graph-fill" id="rackingInBar"></div></div>
         <span class="bar-graph-value" id="rackingInValue">%</span>
     </div>
     <div class="bar-graph-container" id="rackingOutContainer">
-        <span class="bar-graph-label">RACKING OUT:</span>
+        <span class="bar-graph-label">@Localizer["RACKING OUT:"]</span>
         <div class="bar-graph-track"><div class="bar-graph-fill-right" id="rackingOutBar"></div></div>
         <span class="bar-graph-value" id="rackingOutValue">%</span>
     </div>
 
     <div class="write-status" id="writeStatusMessage"></div>
 
-    <div class="main-button-container" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
-        <button class="btn-blue hmi-btn hmi-interactive-btn" id="btn-home">HOME</button>
-        <button class="btn-blue hmi-btn hmi-interactive-btn" id="btn-emg-rack">EMG RACK</button>
-        <button class="btn-blue hmi-btn hmi-interactive-btn" id="btn-point-table">POINT TABLE</button>
+    <div class="main-button-container">
+        <button class="btn-blue hmi-btn hmi-interactive-btn" id="btn-home">@Localizer["HOME"]</button>
+        <button class="btn-blue hmi-btn hmi-interactive-btn" id="btn-emg-rack">@Localizer["EMG RACK"]</button>
+        <button class="btn-blue hmi-btn hmi-interactive-btn" id="btn-point-table">@Localizer["POINT TABLE"]</button>
     </div>
 </div>
 
 @section Scripts {
     <script>
         const writeStatusMessageDiv = document.getElementById('writeStatusMessage');
-        const langSelect = document.getElementById('langSelect');
+        const langSelect = document.getElementById('langSelect'); // From Layout
 
         // ========= YOUR EXISTING R/W MAPPINGS =========
         const writableRegisterIds = ["ContOffTime"];
@@ -423,13 +398,18 @@
         // ========= LANGUAGE: fetch PLC EN or DB GU =========
         async function refreshBreakerNames() {
             try {
-                const handler = (langSelect.value === 'gu')
+                // Fix: Correct check for 'gu-IN'
+                const currentLang = (langSelect && langSelect.value.indexOf('gu') !== -1) ? 'gu' : 'en';
+
+                const handler = (currentLang === 'gu')
                     ? 'ReadBreakerTypesLocalized&lang=gu'
                     : 'ReadBreakerTypes';
+
                 const res = await fetch(`?handler=${handler}`);
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const j = await res.json();
                 if (!j.success) return;
+
                 const n = j.names || [];
                 document.getElementById('BreakerTypeName1').textContent = n[0] || '';
                 document.getElementById('BreakerTypeName2').textContent = n[1] || '';
@@ -506,9 +486,9 @@
                 const key = id.charAt(0).toLowerCase() + id.slice(1);
                 if (!el || data[key] === undefined) return;
 
-                // Don't overwrite breaker names when Gujarati selected
-                const isBreaker = id === 'BreakerTypeName1' || id === 'BreakerTypeName2' || id === 'BreakerTypeName3' || id === 'BreakerTypeName4';
-                if (isBreaker && langSelect.value === 'gu') return;
+                // Fix: Prevent flickering by checking for Gujarati
+                const isBreaker = id.startsWith("BreakerTypeName");
+                if (isBreaker && langSelect && langSelect.value.indexOf('gu') !== -1) return;
 
                 if (fieldsToDivideBy10.includes(id)) el.textContent = (Number(data[key]) / 440.0).toFixed(1);
                 else el.textContent = data[key];
@@ -663,7 +643,12 @@
             setInterval(fetchModbusData, 1000);
             setInterval(refreshBreakerNames, 2000);
 
-            langSelect.addEventListener('change', refreshBreakerNames);
+            if (langSelect) {
+                langSelect.addEventListener('change', () => {
+                    try { localStorage.setItem('hmi_lang', langSelect.value); } catch(e) { /* ignore */ }
+                    refreshBreakerNames();
+                });
+            }
         });
     </script>
 }
