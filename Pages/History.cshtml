@@ -1,7 +1,9 @@
 ﻿@page
 @model FX5u_Web_HMI_App.Pages.HistoryModel
+@using Microsoft.AspNetCore.Mvc.Localization
+@inject IViewLocalizer Localizer
 @{
-    ViewData["Title"] = "History Viewer";
+    ViewData["Title"] = Localizer["History Viewer"];
 }
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -74,6 +76,7 @@
 
         .quick-filters .hmi-btn {
             background-color: #6c757d;
+            text-decoration: none;
         }
 
     .chart-container {
@@ -94,29 +97,27 @@
 
 <div class="container text-center">
     @Html.AntiForgeryToken()
-    <h1>Historical Data Viewer</h1>
+    <h1>@Localizer["Historical Data Viewer"]</h1>
 
-    <!-- Quick filters -->
     <div class="quick-filters">
-        <a class="hmi-btn" href="?Range=1h">Last 1 Hour</a>
-        <a class="hmi-btn" href="?Range=24h">Last 24 Hours</a>
-        <a class="hmi-btn" href="?Range=7d">Last 7 Days</a>
+        <a class="hmi-btn" href="?Range=1h">@Localizer["Last 1 Hour"]</a>
+        <a class="hmi-btn" href="?Range=24h">@Localizer["Last 24 Hours"]</a>
+        <a class="hmi-btn" href="?Range=7d">@Localizer["Last 7 Days"]</a>
     </div>
 
-    <!-- Date/time filter (ALWAYS LOCAL; no JS conversion anymore) -->
     <form method="get" class="filter-bar" id="historyFilterForm">
         <div>
-            <label for="DisplayStart">Start Time:</label>
+            <label for="DisplayStart">@Localizer["Start Time:"]</label>
             <input type="datetime-local" step="1"
                    asp-for="DisplayStart" asp-format="{0:yyyy-MM-ddTHH:mm:ss}" />
         </div>
         <div>
-            <label for="DisplayEnd">End Time:</label>
+            <label for="DisplayEnd">@Localizer["End Time:"]</label>
             <input type="datetime-local" step="1"
                    asp-for="DisplayEnd" asp-format="{0:yyyy-MM-ddTHH:mm:ss}" />
         </div>
         <input type="hidden" asp-for="ClientOffsetMinutes" id="ClientOffsetMinutes" />
-        <button type="submit" class="hmi-btn btn-blue">Filter</button>
+        <button type="submit" class="hmi-btn btn-blue">@Localizer["Filter"]</button>
     </form>
 
     <div class="chart-container">
@@ -124,8 +125,8 @@
     </div>
 
     <div class="footer-nav">
-        <button class="btn-blue hmi-btn hmi-interactive-btn" id="btn-home">HOME</button>
-        <button class="btn-blue hmi-btn hmi-interactive-btn" id="btn-next">NEXT</button>
+        <button class="btn-blue hmi-btn hmi-interactive-btn" id="btn-home">@Localizer["HOME"]</button>
+        <button class="btn-blue hmi-btn hmi-interactive-btn" id="btn-next">@Localizer["NEXT"]</button>
     </div>
 </div>
 
@@ -136,7 +137,7 @@
           const form = document.getElementById('historyFilterForm');
           const offsetInput = document.getElementById('ClientOffsetMinutes');
 
-          // Send the client's offset on submit (minutes to add Local => UTC)
+          // Send the client's offset on submit
           if (form && offsetInput) {
             form.addEventListener('submit', () => {
               offsetInput.value = new Date().getTimezoneOffset();
@@ -150,25 +151,33 @@
           const dataRPM      = @Html.Raw(Model.ChartDataValues_RPM ?? "[]");
           const dataBrkNo    = @Html.Raw(Model.ChartDataValues_BrakerNo ?? "[]");
 
+          // Localized Chart Labels
+          const lblTorque   = '@Localizer["Torque"]';
+          const lblPosition = '@Localizer["Position (mm)"]';
+          const lblRPM      = '@Localizer["RPM"]';
+          const lblBrk      = '@Localizer["Breaker No"]';
+          const lblXAxis    = '@Localizer["Local Time (IST)"]';
+          const lblTimeTooltip = '@Localizer["Time"]';
+
           new Chart(ctx, {
             type: 'line',
             data: {
               labels: labelsLocal,
               datasets: [
-                { label: 'Torque',         data: dataTorque,   borderColor: '#FF6384', yAxisID: 'y' },
-                { label: 'Position (mm)',  data: dataPosition, borderColor: '#36A2EB', yAxisID: 'y' },
-                { label: 'RPM',            data: dataRPM,      borderColor: '#FFCE56', yAxisID: 'y' },
-                { label: 'Breaker No',     data: dataBrkNo,    borderColor: '#4BC0C0', yAxisID: 'y', stepped: true }
+                { label: lblTorque,   data: dataTorque,   borderColor: '#FF6384', yAxisID: 'y' },
+                { label: lblPosition, data: dataPosition, borderColor: '#36A2EB', yAxisID: 'y' },
+                { label: lblRPM,      data: dataRPM,      borderColor: '#FFCE56', yAxisID: 'y' },
+                { label: lblBrk,      data: dataBrkNo,    borderColor: '#4BC0C0', yAxisID: 'y', stepped: true }
               ]
             },
             options: {
               responsive: true,
               scales: {
-                x: { type: 'category', title: { display: true, text: 'Local Time (IST)' } },
+                x: { type: 'category', title: { display: true, text: lblXAxis } },
                 y: { beginAtZero: true }
               },
               plugins: {
-                tooltip: { callbacks: { title: (items) => `Time: ${items[0].label}` } }
+                tooltip: { callbacks: { title: (items) => `${lblTimeTooltip}: ${items[0].label}` } }
               }
             }
           });

@@ -16,34 +16,28 @@ namespace FX5u_Web_HMI_App.Pages
         private readonly ILogger<HistoryModel> _logger;
         private readonly LogDbContext _context;
 
-        // Chart data
-        public List<DataLog> Logs { get; set; }
-        public string ChartDataLabelsLocal { get; set; }    // IST strings for the chart
+        // Chart data strings (JSON)
+        public string ChartDataLabelsLocal { get; set; }
         public string ChartDataValues_Torque { get; set; }
         public string ChartDataValues_Position { get; set; }
         public string ChartDataValues_RPM { get; set; }
         public string ChartDataValues_BrakerNo { get; set; }
 
-        // Internal UTC window used for querying (not bound in the UI)
+        // Internal UTC window
         public DateTime StartDateUtc { get; set; }
         public DateTime EndDateUtc { get; set; }
 
-        // UI filter fields (always shown/edited in LOCAL time)
+        // UI filter fields (LOCAL time)
         [BindProperty(SupportsGet = true)] public DateTime DisplayStart { get; set; }
         [BindProperty(SupportsGet = true)] public DateTime DisplayEnd { get; set; }
 
-        // Client offset (minutes to add Local => UTC)
         [BindProperty(SupportsGet = true)] public int ClientOffsetMinutes { get; set; }
-
-        // Quick ranges
         [BindProperty(SupportsGet = true)] public string Range { get; set; }
 
-        // Paging (kept if you re-add later)
+        // Paging
         [BindProperty(SupportsGet = true)] public int CurrentPage { get; set; } = 1;
         public int PageSize { get; set; } = 100;
         public int TotalPages { get; set; }
-        public bool HasPreviousPage => CurrentPage > 1;
-        public bool HasNextPage => CurrentPage < TotalPages;
 
         public HistoryModel(ILogger<HistoryModel> logger, LogDbContext context)
         {
@@ -53,10 +47,9 @@ namespace FX5u_Web_HMI_App.Pages
 
         public async Task OnGetAsync()
         {
-            // 1) Decide the UTC window and the LOCAL fields to render
+            // 1) Decide UTC window and LOCAL fields
             if (!string.IsNullOrEmpty(Range))
             {
-                // Quick ranges: compute in UTC, render LOCAL
                 EndDateUtc = DateTime.UtcNow;
                 StartDateUtc = Range switch
                 {
@@ -71,26 +64,21 @@ namespace FX5u_Web_HMI_App.Pages
             }
             else if (DisplayStart == DateTime.MinValue || DisplayEnd == DateTime.MinValue)
             {
-                // First load: default last 24h — render LOCAL, compute UTC for query
                 var ist = GetIndiaTimeZone();
                 var nowIst = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, ist);
                 DisplayEnd = nowIst;
                 DisplayStart = nowIst.AddHours(-24);
 
-                // Convert local (IST) to UTC for querying
-                StartDateUtc = DisplayStart.AddMinutes(ClientOffsetMinutes);
-                EndDateUtc = DisplayEnd.AddMinutes(ClientOffsetMinutes);
-                StartDateUtc = DateTime.SpecifyKind(StartDateUtc, DateTimeKind.Utc);
-                EndDateUtc = DateTime.SpecifyKind(EndDateUtc, DateTimeKind.Utc);
+                StartDateUtc = DateTime.SpecifyKind(DisplayStart.AddMinutes(ClientOffsetMinutes), DateTimeKind.Utc);
+                EndDateUtc = DateTime.SpecifyKind(DisplayEnd.AddMinutes(ClientOffsetMinutes), DateTimeKind.Utc);
             }
             else
             {
-                // Manual filter submit: Display* are LOCAL; convert to UTC using offset
                 StartDateUtc = DateTime.SpecifyKind(DisplayStart.AddMinutes(ClientOffsetMinutes), DateTimeKind.Utc);
                 EndDateUtc = DateTime.SpecifyKind(DisplayEnd.AddMinutes(ClientOffsetMinutes), DateTimeKind.Utc);
             }
 
-            // 2) Query with UTC window
+            // 2) Query
             var query = _context.DataLogs
                 .Where(log => log.Timestamp >= StartDateUtc && log.Timestamp <= EndDateUtc)
                 .OrderBy(log => log.Timestamp);
@@ -105,9 +93,7 @@ namespace FX5u_Web_HMI_App.Pages
                 .Take(PageSize)
                 .ToListAsync();
 
-            Logs = page;
-
-            // 3) Build IST labels on the server (plain strings so Chart.js won't add GMT)
+            // 3) Build Labels (IST)
             var istTz = GetIndiaTimeZone();
             var labelsLocal = page.Select(log =>
             {

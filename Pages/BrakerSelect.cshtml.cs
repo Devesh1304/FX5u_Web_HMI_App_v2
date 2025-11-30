@@ -6,8 +6,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using FX5u_Web_HMI_App.Data;          // NameTranslation, LocaleBreakerNames, LogDbContext
+using FX5u_Web_HMI_App.Data;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization; // Needed
 
 namespace FX5u_Web_HMI_App.Pages
 {
@@ -28,7 +29,6 @@ namespace FX5u_Web_HMI_App.Pages
         [BindProperty] public string ConnectionStatus { get; set; } = "Disconnected";
         [BindProperty] public string ErrorMessage { get; set; } = string.Empty;
 
-        // 20 names
         [BindProperty] public string BrakerName1 { get; set; }
         [BindProperty] public string BrakerName2 { get; set; }
         [BindProperty] public string BrakerName3 { get; set; }
@@ -56,12 +56,6 @@ namespace FX5u_Web_HMI_App.Pages
         [BindProperty] public int ButtonStatusBits1_10 { get; set; }
         [BindProperty] public int ButtonStatusBits11_20 { get; set; }
         #endregion
-
-        private static readonly Dictionary<string, string> _writableInt16Map = new()
-        {
-            { nameof(BrakerSelect1), "D4401" },
-            { nameof(BrakerSelect2), "D4402" }
-        };
 
         public async Task OnGet()
         {
@@ -94,16 +88,22 @@ namespace FX5u_Web_HMI_App.Pages
         }
 
         // ===== GU grid via NameTranslations, fallback to LocaleBreakerNames(gu, Id 1..20) =====
-        public async Task<JsonResult> OnGetReadBreakerGridLocalized(string lang = "gu")
+        public async Task<JsonResult> OnGetReadBreakerGridLocalized(string lang)
         {
             try
             {
+                // Detect lang if missing
+                if (string.IsNullOrEmpty(lang))
+                {
+                    lang = CultureInfo.CurrentUICulture.Name.StartsWith("gu", StringComparison.OrdinalIgnoreCase) ? "gu" : "en";
+                }
+
                 var en = await Read20NamesEnAsync();
 
                 if (!string.Equals(lang, "gu", StringComparison.OrdinalIgnoreCase))
                     return new JsonResult(new { success = true, names = en });
 
-                // Seed missing EN keys (like Index page)
+                // Seed missing EN keys
                 var toSeed = en.Where(s => !string.IsNullOrWhiteSpace(s)).Distinct().ToList();
                 if (toSeed.Count > 0)
                 {
@@ -126,7 +126,7 @@ namespace FX5u_Web_HMI_App.Pages
                 var dict = maps.ToDictionary(t => t.En, t => t.Gu ?? string.Empty, StringComparer.Ordinal);
                 var outNames = en.Select(s => dict.TryGetValue(s ?? string.Empty, out var gu) ? gu : string.Empty).ToArray();
 
-                // Positional fallback from LocaleBreakerNames (Id 1..20 for GU)
+                // Positional fallback
                 if (outNames.Any(x => string.IsNullOrWhiteSpace(x)))
                 {
                     var guFallback = await _db.LocaleBreakerNames
@@ -155,7 +155,8 @@ namespace FX5u_Web_HMI_App.Pages
             }
         }
 
-        // ===== Selection & writes (unchanged logic) =====
+        public class BreakerSelectionRequest { public int BreakerNumber { get; set; } }
+
         public async Task<JsonResult> OnPostSelectBreaker([FromBody] BreakerSelectionRequest request)
         {
             if (request.BreakerNumber < 1 || request.BreakerNumber > 20)
@@ -181,37 +182,11 @@ namespace FX5u_Web_HMI_App.Pages
                 var wr = await _slmpService.WriteAsync("D1001", d1001v);
                 if (!wr.IsSuccess) throw new Exception(wr.Message);
 
-                return new JsonResult(new { status = "Success", message = $"Selected Breaker {request.BreakerNumber} and toggled bit." });
+                return new JsonResult(new { status = "Success", message = $"Selected Breaker {request.BreakerNumber}." });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "SelectBreaker failed for {BreakerNumber}", request.BreakerNumber);
-                return new JsonResult(new { status = "Error", message = ex.Message });
-            }
-        }
-
-        public async Task<JsonResult> OnPostWriteRegister([FromBody] WriteRequest request)
-        {
-            if (string.IsNullOrEmpty(request?.RegisterName) || string.IsNullOrEmpty(request.Value))
-                return new JsonResult(new { status = "Error", message = "Request data is missing." });
-
-            try
-            {
-                if (_writableInt16Map.TryGetValue(request.RegisterName, out var addr))
-                {
-                    if (!short.TryParse(request.Value, out var val16))
-                        throw new FormatException("Value is not a valid 16-bit integer.");
-
-                    var res = await _slmpService.WriteAsync(addr, val16);
-                    if (!res.IsSuccess) throw new Exception(res.Message);
-
-                    return new JsonResult(new { status = "Success", message = $"Wrote {request.Value} to {request.RegisterName}." });
-                }
-                throw new KeyNotFoundException($"Writable register '{request.RegisterName}' not found.");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "WriteRegister failed: {RegisterName}", request?.RegisterName);
+                _logger.LogError(ex, "SelectBreaker failed");
                 return new JsonResult(new { status = "Error", message = ex.Message });
             }
         }
@@ -220,7 +195,6 @@ namespace FX5u_Web_HMI_App.Pages
         {
             try
             {
-                // names + selections + status bits (for button coloring)
                 var namesTask = _slmpService.ReadInt16BlockAsync("D4000", 200);
                 var select1Task = _slmpService.ReadInt16Async("D4401");
                 var select2Task = _slmpService.ReadInt16Async("D4402");
@@ -230,19 +204,8 @@ namespace FX5u_Web_HMI_App.Pages
                 await Task.WhenAll(namesTask, select1Task, select2Task, bitsTask, d1001Task);
 
                 var namesRes = namesTask.Result;
-                var s1 = select1Task.Result;
-                var s2 = select2Task.Result;
-                var bitsRes = bitsTask.Result;
-                var d1001Res = d1001Task.Result;
+                if (!namesRes.IsSuccess) throw new Exception("Failed to read data.");
 
-                if (!namesRes.IsSuccess || !bitsRes.IsSuccess || !d1001Res.IsSuccess)
-                    throw new Exception("Failed to read data from PLC.");
-
-                BrakerSelect1 = s1.IsSuccess ? s1.Content : 0;
-                BrakerSelect2 = s2.IsSuccess ? s2.Content : 0;
-                D1001 = d1001Res.Content;
-
-                // parse 20 strings (10 words each -> 20 bytes ASCII)
                 var data = namesRes.Content;
                 for (int i = 0; i < 20; i++)
                 {
@@ -257,8 +220,7 @@ namespace FX5u_Web_HMI_App.Pages
                     GetType().GetProperty($"BrakerName{i + 1}")?.SetValue(this, value);
                 }
 
-                // pack 20 bits into two ints for client style
-                var bits = bitsRes.Content;
+                var bits = bitsTask.Result.Content;
                 ButtonStatusBits1_10 = 0;
                 ButtonStatusBits11_20 = 0;
                 for (int i = 0; i < 20; i++)
@@ -275,13 +237,12 @@ namespace FX5u_Web_HMI_App.Pages
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "UpdateModelValuesAsync failed (BrakerSelect).");
+                _logger.LogError(ex, "UpdateModelValuesAsync failed");
                 ConnectionStatus = "Error";
                 ErrorMessage = ex.Message;
             }
         }
 
-        // Helper: read 20 EN names from PLC
         private async Task<string[]> Read20NamesEnAsync()
         {
             var block = await _slmpService.ReadInt16BlockAsync("D4000", 200);
@@ -297,13 +258,9 @@ namespace FX5u_Web_HMI_App.Pages
                     bytes[w * 2] = wb[0];
                     bytes[w * 2 + 1] = wb[1];
                 }
-                names[i] = Encoding.ASCII.GetString(bytes).TrimEnd('\0');
+                names[i] = Encoding.ASCII.GetString(bytes).TrimEnd('\0').Trim();
             }
             return names;
         }
     }
-
-    public class BreakerSelectionRequest { public int BreakerNumber { get; set; } }
-
-
 }

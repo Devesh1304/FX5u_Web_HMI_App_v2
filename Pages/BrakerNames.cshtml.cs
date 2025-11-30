@@ -17,7 +17,7 @@ namespace FX5u_Web_HMI_App.Pages
         private readonly ISLMPService _slmpService;
         private readonly LogDbContext _db;
 
-        #region Bound Properties
+        // --- Bound Properties for the 20 Breaker Names ---
         [BindProperty] public string ConnectionStatus { get; set; } = "Disconnected";
         [BindProperty] public string ErrorMessage { get; set; } = string.Empty;
 
@@ -41,15 +41,14 @@ namespace FX5u_Web_HMI_App.Pages
         [BindProperty] public string BrakerName18 { get; set; }
         [BindProperty] public string BrakerName19 { get; set; }
         [BindProperty] public string BrakerName20 { get; set; }
-        #endregion
 
-        private const int WORDS_PER_NAME = 10; // 10 words = 20 ASCII bytes
-        private const string BASE_D = "D4000";  // page 1 base
+        private const int WORDS_PER_NAME = 10; // 10 words = 20 ASCII characters
+        private const string BASE_D = "D4000";
         private static readonly Dictionary<string, string> _stringAddressMap = new();
 
         static BrakerNamesModel()
         {
-            // BrakerName1..20 -> D4000..D4199 (10 words each)
+            // Map BrakerName1..20 -> D4000..D4199
             for (int i = 0; i < 20; i++)
                 _stringAddressMap.Add($"BrakerName{i + 1}", $"D{4000 + (i * WORDS_PER_NAME)}");
         }
@@ -63,17 +62,18 @@ namespace FX5u_Web_HMI_App.Pages
 
         public async Task OnGet()
         {
-            _slmpService.SetHeartbeatValue(20);
+            _slmpService.SetHeartbeatValue(20); // Heartbeat for this screen
             await UpdateModelValuesAsync();
         }
 
-        // ---------- English (PLC) ----------
+        // --- Class for English Write Request ---
         public class WriteStringRequest
         {
             public string Name { get; set; } = "";
             public string Value { get; set; } = "";
         }
 
+        // --- READ ALL REGISTERS (Called by JS fetch) ---
         public async Task<JsonResult> OnGetReadRegisters()
         {
             await UpdateModelValuesAsync();
@@ -88,6 +88,7 @@ namespace FX5u_Web_HMI_App.Pages
             return new JsonResult(dict);
         }
 
+        // --- WRITE ENGLISH TO PLC ---
         [ValidateAntiForgeryToken]
         public async Task<JsonResult> OnPostWriteString([FromBody] WriteStringRequest request)
         {
@@ -97,30 +98,29 @@ namespace FX5u_Web_HMI_App.Pages
             try
             {
                 if (!_stringAddressMap.TryGetValue(request.Name, out var address))
-                    throw new KeyNotFoundException($"Writable register '{request.Name}' not found.");
+                    throw new KeyNotFoundException($"Register '{request.Name}' not found.");
 
                 var val = request.Value ?? string.Empty;
                 if (val.Length > 20)
                     return new JsonResult(new { status = "Error", message = "Max 20 characters." });
 
-                // 🔴 IMPORTANT: write full 10 words (20 bytes), zero-padded
+                // 1. Clear Memory & Write New Value to PLC
                 var ok = await WriteFixedAsciiAsync(address, val);
                 if (!ok) throw new Exception("PLC write failed.");
 
-                // keep your NameTranslations upsert if you added it
+                // 2. Update Database (Link English Key to Gujarati)
                 await UpsertTranslationAsync(en: val, gu: null);
 
                 return new JsonResult(new { status = "Success", message = $"Wrote '{val}' to {request.Name}." });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to write string: {RegisterName}", request?.Name);
+                _logger.LogError(ex, "Failed to write string: {Name}", request?.Name);
                 return new JsonResult(new { status = "Error", message = ex.Message });
             }
         }
 
-
-        // ---------- Gujarati (DB Ids 1..20) ----------
+        // --- GET GUJARATI VALUES (DB) ---
         public JsonResult OnGetGetGujarati()
         {
             var values = Enumerable.Range(1, 20)
@@ -137,6 +137,7 @@ namespace FX5u_Web_HMI_App.Pages
             return new JsonResult(new { values });
         }
 
+        // --- SAVE GUJARATI TO DB ---
         public class SetGujaratiRequest
         {
             public string Name { get; set; } = "";
@@ -151,10 +152,12 @@ namespace FX5u_Web_HMI_App.Pages
                 if (string.IsNullOrWhiteSpace(req?.Name) || !req.Name.StartsWith("BrakerName"))
                     return new JsonResult(new { status = "Error", message = "Invalid name" });
 
-                if ((req.Value ?? "").Length > 20)
-                    return new JsonResult(new { status = "Error", message = "Max 20 characters" });
+                if ((req.Value ?? "").Length > 50)
+                    return new JsonResult(new { status = "Error", message = "Text too long" });
 
-                int idx = int.Parse(req.Name.Replace("BrakerName", "")); // 1..20
+                int idx = int.Parse(req.Name.Replace("BrakerName", "")); // Extract ID (1-20)
+
+                // 1. Update Fallback Table (LocaleBreakerNames)
                 var row = _db.LocaleBreakerNames.SingleOrDefault(x => x.Id == idx && x.Lang == "gu");
                 if (row == null)
                     _db.LocaleBreakerNames.Add(new LocaleBreakerName { Id = idx, Lang = "gu", Text = req.Value ?? string.Empty });
@@ -163,7 +166,8 @@ namespace FX5u_Web_HMI_App.Pages
 
                 await _db.SaveChangesAsync();
 
-                // 🔁 Auto-maintain NameTranslations: look up current English from PLC, map En→Gu
+                // 2. Update Translation Table (Link current PLC English value to this Gujarati value)
+                // We read the PLC first to know what English word corresponds to this Gujarati word
                 var read = await _slmpService.ReadInt16BlockAsync($"D{4000 + (idx - 1) * WORDS_PER_NAME}", WORDS_PER_NAME);
                 if (read.IsSuccess)
                 {
@@ -175,19 +179,20 @@ namespace FX5u_Web_HMI_App.Pages
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to save Gujarati text for {Name}", req?.Name);
+                _logger.LogError(ex, "Failed to save Gujarati text");
                 return new JsonResult(new { status = "Error", message = ex.Message });
             }
         }
 
-        // ---------- Helpers ----------
+        // ================= HELPERS =================
+
         private async Task UpdateModelValuesAsync()
         {
             try
             {
-                var read = await _slmpService.ReadInt16BlockAsync(BASE_D, WORDS_PER_NAME * 20);
-                if (!read.IsSuccess)
-                    throw new Exception("Failed to read breaker names (D4000) from PLC: " + read.Message);
+                // Read all 20 names in one block (20 names * 10 words = 200 words)
+                var read = await _slmpService.ReadInt16BlockAsync(BASE_D, 200);
+                if (!read.IsSuccess) throw new Exception(read.Message);
 
                 var words = read.Content;
 
@@ -197,10 +202,8 @@ namespace FX5u_Web_HMI_App.Pages
                     if (prop is null) continue;
 
                     var slice = new ArraySegment<short>(words, i * WORDS_PER_NAME, WORDS_PER_NAME);
-                    string value = DecodeAscii(slice);
-                    prop.SetValue(this, value);
+                    prop.SetValue(this, DecodeAscii(slice));
                 }
-
                 ConnectionStatus = "Connected";
                 ErrorMessage = string.Empty;
             }
@@ -226,7 +229,6 @@ namespace FX5u_Web_HMI_App.Pages
 
         private static string Normalize(string s) => (s ?? "").Trim();
 
-        // Auto-maintain English→Gujarati dictionary
         private async Task UpsertTranslationAsync(string en, string? gu)
         {
             en = Normalize(en);
@@ -235,52 +237,26 @@ namespace FX5u_Web_HMI_App.Pages
 
             var row = await _db.NameTranslations.SingleOrDefaultAsync(t => t.En == en);
             if (row == null)
-            {
                 _db.NameTranslations.Add(new NameTranslation { En = en, Gu = gu ?? "" });
-            }
-            else
-            {
-                if (!string.IsNullOrEmpty(gu)) row.Gu = gu;
-            }
+            else if (!string.IsNullOrEmpty(gu))
+                row.Gu = gu; // Update existing translation
+
             await _db.SaveChangesAsync();
         }
-        private static short[] PackAsciiFixed(string value, int words = 10)
-        {
-            var bytes = new byte[words * 2]; // 20 bytes
-            var src = System.Text.Encoding.ASCII.GetBytes(value ?? string.Empty);
 
-            var len = Math.Min(src.Length, bytes.Length);
-            Array.Copy(src, 0, bytes, 0, len); // rest stays 0x00
-
-            // pack little-endian => low byte, then high byte per word
-            var outWords = new short[words];
-            for (int i = 0; i < words; i++)
-            {
-                int b0 = bytes[i * 2 + 0];
-                int b1 = bytes[i * 2 + 1];
-                outWords[i] = (short)((b1 << 8) | b0);
-            }
-            return outWords;
-        }
-
-        // Writes a full, zero-padded 10-word string block into D area
         private async Task<bool> WriteFixedAsciiAsync(string dAddress, string value)
         {
-            // Clear the entire 10-word block (zero out old characters)
-            var zeros = new short[10];
-            var clear = await _slmpService.WriteStringAsync(dAddress, new string('\0', 20));
+            // This version relies only on WriteStringAsync (Available in your current Service)
+            // It clears the register by writing empty characters
+            var zeros = new string('\0', WORDS_PER_NAME * 2); // 20 Null characters
+            var clear = await _slmpService.WriteStringAsync(dAddress, zeros);
+
             if (!clear.IsSuccess) return false;
 
-            // Now write the new string (up to 20 chars)
-            var wr = await _slmpService.WriteStringAsync(dAddress, value ?? string.Empty);
+            if (string.IsNullOrEmpty(value)) return true;
+
+            var wr = await _slmpService.WriteStringAsync(dAddress, value);
             return wr.IsSuccess;
         }
-
     }
-    public class WriteStringRequest
-    {
-        public string Name { get; set; } = "";
-        public string Value { get; set; } = "";
-    }
-
 }
