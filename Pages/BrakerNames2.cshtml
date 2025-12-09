@@ -307,9 +307,12 @@
                     input.addEventListener('keydown', async (e) => {
                         if (e.key === 'Enter') {
                             e.preventDefault(); input.blur();
-                            try { await saveValue(id, input.value); }
-                            catch (error) { console.error(error); }
+                            
                         }
+                    });
+                    input.addEventListener('change', async () => {
+                                    try { await saveValue(id, input.value); }
+                                    catch (error) { console.error(error); }
                     });
                 }
             });

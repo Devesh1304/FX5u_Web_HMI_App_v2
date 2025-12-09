@@ -195,6 +195,9 @@
         background-color: #28a745;
         box-shadow: 0 0 10px #28a745, inset 0 0 5px rgba(255,255,255,0.5);
     }
+   .hmi-btn, .btn-select {
+        touch-action: manipulation; /* Removes 300ms delay on mobile/tablets */
+    }
 </style>
 
 <div class="container text-center">
@@ -336,7 +339,7 @@
         async function performActionsAndAwait(actions) {
             const registersToUpdate = new Map();
             for (const action of actions) {
-                if (action.type === 'momentary') continue;
+                if (action.type === 'momentary') continue; // Skip momentary here, handled separately
                 const registerName = action.register;
                 let currentValue = registersToUpdate.has(registerName)
                     ? registersToUpdate.get(registerName)
@@ -517,8 +520,11 @@
                     input.addEventListener('keydown', (e) => {
                         if (e.key === 'Enter') {
                             e.preventDefault();
-                            writeRegister(id, input.value);
+                            input.blur();
                         }
+                    });
+                    input.addEventListener('change', () => {
+                     writeRegister(id, input.value);
                     });
                 }
             });
@@ -544,31 +550,38 @@
                         }
                         button.setAttribute('data-is-blocked', 'false');
 
-                        // Handle Standard Actions
+                        // --- FIX IS HERE ---
+                        // 1. Execute "Non-Momentary" actions (Toggle, Reset, Set) immediately on press
                         if (config.actions.length > 0) {
-                            const action = config.actions.find(a => a.type === 'momentary');
-                            if(action) {
-                                let val = registerValues[action.register] | (1 << action.position);
-                                await writeRegister(action.register, val.toString());
-                            }
+                            await performActionsAndAwait(config.actions);
                         }
-                        // Handle Side Effects
+
+                        // 2. Execute "Momentary" type actions (Set bit)
+                        const momAction = config.actions.find(a => a.type === 'momentary');
+                        if(momAction) {
+                            let val = registerValues[momAction.register] | (1 << momAction.position);
+                            await writeRegister(momAction.register, val.toString());
+                        }
+
+                        // 3. Execute Side Effects (Set bit)
                         if (config.momentarySideEffect) {
                             await writeBit(config.momentarySideEffect.address, true);
                         }
+
                         await fetchModbusData();
                     };
 
                     const releaseAction = async () => {
                         if (button.getAttribute('data-is-blocked') === 'true') return;
 
-                        if (config.actions.length > 0) {
-                            const action = config.actions.find(a => a.type === 'momentary');
-                            if(action) {
-                                let val = registerValues[action.register] & ~(1 << action.position);
-                                await writeRegister(action.register, val.toString());
-                            }
+                        // 1. Revert "Momentary" type actions (Reset bit)
+                        const momAction = config.actions.find(a => a.type === 'momentary');
+                        if(momAction) {
+                            let val = registerValues[momAction.register] & ~(1 << momAction.position);
+                            await writeRegister(momAction.register, val.toString());
                         }
+
+                        // 2. Revert Side Effects (Reset bit)
                         if (config.momentarySideEffect) {
                             await writeBit(config.momentarySideEffect.address, false);
                         }
@@ -593,8 +606,16 @@
                             }
                         }
                         await performActionsAndAwait(config.actions);
+                       // await fetchModbusData();
+                        if (config.redirect) {
+                       // If navigating, DO NOT fetch data. Just go.
+                       window.location.href = config.redirect;
+                        } else {
+                        // Only fetch data if staying on this page
                         await fetchModbusData();
-                        if (config.redirect) window.location.href = config.redirect;
+                        }
+
+                       // if (config.redirect) window.location.href = config.redirect;
                     });
                 }
             });

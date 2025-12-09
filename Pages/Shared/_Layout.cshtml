@@ -48,6 +48,10 @@
                 border: 1px solid #ced4da;
                 cursor: pointer;
             }
+
+        .hmi-btn, .btn-select {
+            touch-action: manipulation; /* Removes 300ms delay on mobile/tablets */
+        }
     </style>
     @await RenderSectionAsync("Styles", required: false)
 </head>

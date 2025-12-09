@@ -465,9 +465,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (e.key === 'Enter') {
                             e.preventDefault();
                             input.blur();
-                            writeRegister(id, input.value);
+                          //  writeRegister(id, input.value);
                         }
                     });
+                input.addEventListener('change', () => {
+                    writeRegister(id, input.value);
+                });
                 }
             });
             document.querySelectorAll('.hmi-interactive-btn').forEach(button => {

@@ -170,6 +170,9 @@
         color: #007bff;
         transition: color 0.2s ease;
     }
+    .hmi-btn, .btn-select {
+        touch-action: manipulation; /* Removes 300ms delay on mobile/tablets */
+    }
 
         #header-home-link:hover h1 {
             color: #0056b3;
@@ -521,8 +524,17 @@
                                 }
                             }
                             await performActionsAndAwait(cfg.actions || []);
+                            // 2. OPTIMIZATION: Check if we are navigating away
+                            if (cfg.redirect) {
+                             // If navigating, DO NOT fetch data. Just go.
+                             window.location.href = cfg.redirect;
+                            } else {
+                            // Only fetch data if staying on this page
                             await fetchModbusData();
-                            if (cfg.redirect) window.location.href = cfg.redirect;
+                             }
+
+                      //      await fetchModbusData();
+                           
                         } catch (err) {
                             console.error("Write failed:", err);
                             writeStatusMessageDiv.textContent = `Error: ${err.message}`;

@@ -489,9 +489,12 @@
                     input.addEventListener('keydown', (e) => {
                         if (e.key === 'Enter') {
                             e.preventDefault(); input.blur();
-                            writeRegister(id, input.value);
+                            //writeRegister(id, input.value);
                         }
                     });
+                  input.addEventListener('change', (e) => {
+                  writeRegister(id, input.value);
+                });
                 }
             });
 

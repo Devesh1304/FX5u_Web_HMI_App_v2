@@ -575,13 +575,17 @@
                 input.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter') {
                         e.preventDefault();
-                        let val = input.value;
-                        if (fieldsToDivideBy10timer.includes(id)) {
-                            const fv = parseFloat(val);
-                            if (!isNaN(fv)) val = String(Math.round(fv * 10));
-                        }
-                        writeRegister(id, val);
+
                     }
+                });
+                input.addEventListener('change', () => {
+                writeRegister(id, input.value);
+                  let val = input.value;
+                  if (fieldsToDivideBy10timer.includes(id)) {
+                  const fv = parseFloat(val);
+                  if (!isNaN(fv)) val = String(Math.round(fv * 10));
+                  }
+                  writeRegister(id, val);
                 });
             });
 
