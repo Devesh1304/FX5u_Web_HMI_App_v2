@@ -479,12 +479,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 button.addEventListener('click', async () => {
                     try {
                         // Your robust click handler with condition checks can be pasted here if needed
-                        await performActionsAndAwait(config.actions);
-                        await fetchData();
+                        if (config.actions) await performActionsAndAwait(config.actions);                       
 
                         if (config.redirect) {
                             window.location.href = config.redirect;
                         }
+                                else await fetchData();
                     } catch (error) {
                         console.error("Button action failed:", error);
                     }
@@ -492,8 +492,35 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
 
-            fetchData();
-            setInterval(fetchData, 1000);
+        // 3. SMART POLLING LOOP (Fixes the 20s delay on PointTable2)
+            // Instead of setInterval, we use a recursive function.
+            let isPageActive = true;
+
+            async function startPolling() {
+                // Fetch immediately on load
+                await fetchData();
+
+                // Start the loop
+                pollLoop();
+            }
+
+            async function pollLoop() {
+                if (!isPageActive) return;
+
+                // Wait 1 second AFTER the previous fetch finishes
+                setTimeout(async () => {
+                    if (!isPageActive) return;
+                    await fetchData();
+                    pollLoop(); // Call self again
+                }, 1000);
+            }
+
+            // Stop polling if user navigates away (optimization)
+            window.addEventListener('beforeunload', () => {
+                isPageActive = false;
+            });
+
+            startPolling();
         });
 
 

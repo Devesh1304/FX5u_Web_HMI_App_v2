@@ -631,14 +631,22 @@
                     });
                 }
 
-                if (cfg.momentarySideEffect) {
-                    const addr = cfg.momentarySideEffect.address;
-                    btn.addEventListener('mousedown', async () => { await writeBit(addr, true); await fetchModbusData(); });
-                    btn.addEventListener('mouseup',   async () => { await writeBit(addr, false); await fetchModbusData(); });
-                    btn.addEventListener('mouseleave',async () => { await writeBit(addr, false); await fetchModbusData(); });
-                    btn.addEventListener('touchstart',e => { e.preventDefault(); writeBit(addr, true); });
-                    btn.addEventListener('touchend',  e => { e.preventDefault(); writeBit(addr, false); });
-                }
+        if (cfg.momentarySideEffect) {
+            const addr = cfg.momentarySideEffect.address;
+
+            // Define simple async functions
+            const press = async () => { await writeBit(addr, true); };
+            const release = async () => { await writeBit(addr, false); };
+
+            // Mouse events (Removed fetchModbusData to prevent lag)
+            btn.addEventListener('mousedown', press);
+            btn.addEventListener('mouseup',   release);
+            btn.addEventListener('mouseleave', release);
+
+            // Touch events (Removed e.preventDefault so navigation works!)
+            btn.addEventListener('touchstart', press);
+            btn.addEventListener('touchend',   release);
+        }
             });
 
             // Timers

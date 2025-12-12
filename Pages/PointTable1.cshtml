@@ -7,6 +7,11 @@
 }
 
 <style>
+    /* Makes buttons respond instantly on touch screens */
+    .hmi-btn, input {
+        touch-action: manipulation;
+    }
+
     .modal {
         display: none;
         position: fixed;
@@ -85,7 +90,7 @@
         border-color: #c3e6cb;
     }
 
-    .status-disconnected, .error-message, .write-status.error {
+    .status-disconnected {
         background-color: #f8d7da;
         color: #721c24;
         border-color: #f5c6cb;
@@ -104,6 +109,12 @@
             background-color: #d4edda;
             color: #155724;
             border: 1px solid #c3e6cb;
+        }
+
+        .write-status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
         }
 
     input[type="number"] {
@@ -197,25 +208,13 @@
         grid-template-columns: repeat(3, 1fr);
         gap: 10px;
     }
-
-    /* Header Link Styling */
-    #header-home-link {
-        text-decoration: none;
-        cursor: pointer;
-        color: #007bff;
-        transition: color 0.2s ease;
-    }
-
-        #header-home-link:hover h1 {
-            color: #0056b3;
-        }
 </style>
 
 <div class="container text-center">
     <a id="btn-pop" style="cursor:pointer;"><h1>@Localizer["Point Table 1"]</h1></a>
     @Html.AntiForgeryToken()
 
-    <div class="status-message" id="connectionStatus"></div>
+    <div class="status-message" id="connectionStatus">Disconnected</div>
     <div class="error-message" id="errorMessage" style="display: none;"></div>
 
     <div class="main-button-container">
@@ -246,6 +245,7 @@
             </tr>
         </thead>
         <tbody>
+            @* --- Row 1 --- *@
             <tr>
                 <td class="row-label">@Localizer["POSITION"]</td>
                 <td><input type="number" id="PositionWrite1" /></td>
@@ -255,6 +255,7 @@
                 <td><span class="read-only-value" id="PositionRead2"></span></td>
                 <td><span class="read-only-value" id="PositionRead3"></span></td>
             </tr>
+            @* --- Row 2 --- *@
             <tr>
                 <td class="row-label">@Localizer["SPEED"]</td>
                 <td><input type="number" id="SpeedWrite1" /></td>
@@ -264,6 +265,7 @@
                 <td><span class="read-only-value" id="SpeedRead2"></span></td>
                 <td><span class="read-only-value" id="SpeedRead3"></span></td>
             </tr>
+            @* --- Row 3 --- *@
             <tr>
                 <td class="row-label">@Localizer["ACC"]</td>
                 <td><input type="number" id="AccWrite1" /></td>
@@ -273,6 +275,7 @@
                 <td><span class="read-only-value" id="AccRead2"></span></td>
                 <td><span class="read-only-value" id="AccRead3"></span></td>
             </tr>
+            @* --- Row 4 --- *@
             <tr>
                 <td class="row-label">@Localizer["DECC"]</td>
                 <td><input type="number" id="DeccWrite1" /></td>
@@ -282,6 +285,7 @@
                 <td><span class="read-only-value" id="DeccRead2"></span></td>
                 <td><span class="read-only-value" id="DeccRead3"></span></td>
             </tr>
+            @* --- Row 5 --- *@
             <tr>
                 <td class="row-label">@Localizer["DWELL TIME"]</td>
                 <td><input type="number" id="DwellTimeWrite1" /></td>
@@ -291,6 +295,7 @@
                 <td><span class="read-only-value" id="DwellTimeRead2"></span></td>
                 <td><span class="read-only-value" id="DwellTimeRead3"></span></td>
             </tr>
+            @* --- Row 6 --- *@
             <tr>
                 <td class="row-label">@Localizer["AUX. FUN."]</td>
                 <td><input type="number" id="AuxWrite1" /></td>
@@ -300,6 +305,7 @@
                 <td><span class="read-only-value" id="AuxRead2"></span></td>
                 <td><span class="read-only-value" id="AuxRead3"></span></td>
             </tr>
+            @* --- Row 7 --- *@
             <tr>
                 <td class="row-label">@Localizer["M - CODE"]</td>
                 <td><input type="number" id="MWrite1" /></td>
@@ -327,21 +333,20 @@
 </div>
 
 @section Scripts {
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
+    <script src="~/js/plc-signalr.js"></script>
+
     <script>
         const writeStatusMessageDiv = document.getElementById('writeStatusMessage');
 
-        let registerValues = {
-            PointControlRegister: 0
-        };
+        let registerValues = { PointControlRegister: 0 };
         const fieldsToDivideBy10 = [
             "PositionWrite1", "PositionWrite2", "PositionWrite3",
             "PositionRead1", "PositionRead2", "PositionRead3"
         ];
 
         const buttonConfig = {
-            'btn-save': {
-                actions: [{ type: 'toggle', register: 'PointControlRegister', position: 0 }]
-            },
+            'btn-save': { actions: [{ type: 'toggle', register: 'PointControlRegister', position: 0 }] },
             'btn-home': { actions: [], redirect: '/Index' },
             'btn-alm':  { actions: [], redirect: '/Alarms' },
             'btn-next': { actions: [], redirect: '/PointTable2' }
@@ -349,120 +354,133 @@
 
         const allRegisterIds = @Html.Raw(Json.Serialize(Model.GetType().GetProperties().Where(p => p.IsDefined(typeof(Microsoft.AspNetCore.Mvc.BindPropertyAttribute), false) && p.Name != "ConnectionStatus" && p.Name != "ErrorMessage").Select(p => p.Name)));
 
-        function updateUI(data) {
-            const statusDiv = document.getElementById('connectionStatus');
-            statusDiv.textContent = `Connection Status: ${data.connectionStatus}`;
-            statusDiv.className = `status-message ${data.connectionStatus.toLowerCase().includes('connected') ? 'status-connected' : 'status-disconnected'}`;
+        // --- 2. INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // A. Attempt to Join SignalR Group
+            if (typeof startSignalR === 'function') {
+                startSignalR("PointTable1");
+            } else {
+                console.error("SignalR script not loaded!");
+            }
 
-            const errorDiv = document.getElementById('errorMessage');
-            errorDiv.style.display = data.errorMessage ? 'block' : 'none';
-            errorDiv.innerHTML = data.errorMessage ? `<strong>Error:</strong> ${data.errorMessage}` : '';
-
-            allRegisterIds.forEach(id => {
-                const element = document.getElementById(id);
-                const dataKey = id.charAt(0).toLowerCase() + id.slice(1);
-                if (!element || data[dataKey] === undefined) return;
-
-                let displayValue = data[dataKey];
-                // Format for display
-                if (fieldsToDivideBy10.includes(id)) {
-                    displayValue = (data[dataKey] / 440.0).toFixed(1);
-                }
-
-                if (element.tagName === 'INPUT' && document.activeElement !== element) {
-                    element.value = displayValue;
-                } else if (element.tagName === 'SPAN') {
-                    element.textContent = displayValue;
-                }
+            // B. Initialize Inputs (Write logic)
+            document.querySelectorAll('input[type="number"]').forEach(input => {
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+                });
+                input.addEventListener('change', (e) => {
+                    writeRegister(input.id, input.value);
+                });
             });
 
-            for (const key in registerValues) {
-                const dataKey = key.charAt(0).toLowerCase() + key.slice(1);
-                if (data[dataKey] !== undefined) {
-                    registerValues[key] = data[dataKey];
+            // C. Initialize Buttons
+            document.querySelectorAll('.hmi-interactive-btn').forEach(btn => {
+                const cfg = buttonConfig[btn.id];
+                if (!cfg) return;
+
+                btn.addEventListener('click', async () => {
+                    try {
+                        // 1. Perform Writes
+                        if (cfg.actions && cfg.actions.length > 0) {
+                            await performActionsAndAwait(cfg.actions);
+                        }
+
+                        // 2. Instant Navigation
+                        if (cfg.redirect) {
+                            window.location.href = cfg.redirect;
+                        }
+                    } catch (e) { console.error("Action error:", e); }
+                });
+            });
+        });
+
+        // --- 3. SIGNALR HANDLER (Data Update) ---
+        window.onPlcUpdate = function(data) {
+            // Update Connection Status
+            const statusDiv = document.getElementById('connectionStatus');
+            if(statusDiv) {
+                statusDiv.textContent = "Connected (Live)";
+                statusDiv.className = "status-message status-connected";
+            }
+
+            // Update UI Fields
+            for (const [key, value] of Object.entries(data)) {
+                // Update Local Cache (Important for Toggles)
+                registerValues[key] = value;
+
+                const el = document.getElementById(key);
+                if (el) {
+                    if (el.tagName === "INPUT" && document.activeElement === el) continue;
+
+                    let displayVal = value;
+                    if (fieldsToDivideBy10.some(f => key.includes(f) || key === f)) {
+                        if(!isNaN(value)) displayVal = (value / 440.0).toFixed(1);
+                    }
+
+                    if (el.tagName === "INPUT") el.value = displayVal;
+                    else el.textContent = displayVal;
                 }
             }
-            // updateButtonStyles(); // Not needed if no styled buttons
-        }
+        };
 
+        // --- 4. LOGIC FUNCTIONS ---
         async function performActionsAndAwait(actions) {
             const registersToUpdate = new Map();
             for (const action of actions) {
                 if (action.type === 'momentary') continue;
-                const registerName = action.register;
-                let currentValue = registersToUpdate.has(registerName) ? registersToUpdate.get(registerName) : registerValues[registerName];
-                let newValue = currentValue;
-                if (action.type === 'toggle') { newValue ^= (1 << action.position); }
-                else if (action.type === 'set') { newValue |= (1 << action.position); }
-                else if (action.type === 'reset') { newValue &= ~(1 << action.position); }
-                registersToUpdate.set(registerName, newValue);
-            }
-            const writePromises = [];
-            for (const [registerName, finalValue] of registersToUpdate) {
-                writePromises.push(writeRegister(registerName, finalValue.toString()));
-            }
-            return Promise.all(writePromises);
-        }
 
-        async function fetchData() {
-            try {
-                const response = await fetch('?handler=ReadRegisters');
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const data = await response.json();
-                updateUI(data);
-            } catch (error) {
-                updateUI({ connectionStatus: "Fetch Error", errorMessage: error.message });
+                const reg = action.register;
+                // Calculate correct toggle value using current cache
+                let current = registersToUpdate.has(reg) ? registersToUpdate.get(reg) : (registerValues[reg] || 0);
+
+                if (action.type === 'toggle') current ^= (1 << action.position);
+                else if (action.type === 'set') current |= (1 << action.position);
+                else if (action.type === 'reset') current &= ~(1 << action.position);
+
+                registersToUpdate.set(reg, current);
             }
+
+            const writes = [];
+            for (const [reg, val] of registersToUpdate) {
+                writes.push(writeRegister(reg, val.toString()));
+            }
+            return Promise.all(writes);
         }
 
         async function writeRegister(name, value) {
-            writeStatusMessageDiv.textContent = `Sending new value for ${name}...`;
-            writeStatusMessageDiv.className = 'write-status';
+            if(writeStatusMessageDiv) {
+                writeStatusMessageDiv.textContent = `Sending...`;
+                writeStatusMessageDiv.className = 'write-status';
+            }
 
-            let valueToSend = value;
+            let valToSend = value;
             if (fieldsToDivideBy10.includes(name)) {
-                const floatValue = parseFloat(value);
-                if (!isNaN(floatValue)) {
-                    valueToSend = Math.round(floatValue * 440).toString();
-                } else {
-                    writeStatusMessageDiv.textContent = `Invalid number format for ${name}.`;
+                const f = parseFloat(value);
+                if (!isNaN(f)) valToSend = Math.round(f * 440).toString();
+                else return;
+            }
+
+            try {
+                const res = await fetch(`?handler=WriteRegister`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify({ RegisterName: name, Value: valToSend })
+                });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const j = await res.json();
+                if(writeStatusMessageDiv) {
+                    writeStatusMessageDiv.textContent = j.message;
+                    writeStatusMessageDiv.className = `write-status ${j.status.toLowerCase()}`;
+                }
+            } catch (e) {
+                if(writeStatusMessageDiv) {
+                    writeStatusMessageDiv.textContent = `Write error: ${e.message}`;
                     writeStatusMessageDiv.className = 'write-status error';
-                    return;
                 }
             }
-
-            try {
-                const response = await fetch(`?handler=WriteRegister`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-                    },
-                    body: JSON.stringify({ RegisterName: name, Value: valueToSend })
-                });
-
-                if (!response.ok) throw new Error(`Server responded with status ${response.status}`);
-                const result = await response.json();
-                writeStatusMessageDiv.textContent = result.message;
-                writeStatusMessageDiv.className = `write-status ${result.status.toLowerCase()}`;
-                await fetchData();
-            } catch (error) {
-                writeStatusMessageDiv.textContent = `Write failed: ${error.message}`;
-                writeStatusMessageDiv.className = 'write-status error';
-            }
-        }
-
-        async function writeBit(address, value) {
-            try {
-                await fetch(`?handler=WriteBit`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-                    },
-                    body: JSON.stringify({ Address: address, Value: value })
-                });
-            } catch (error) { console.error(`Write bit failed for ${address}:`, error); }
         }
 
         // Modal Logic
@@ -470,51 +488,12 @@
         const popButton = document.getElementById('btn-pop');
         const backBtn = document.getElementById('backBtn');
         const closeBtn = saveModal.querySelector('.close-button');
-
         const openSaveModal = () => saveModal.style.display = 'flex';
         const closeSaveModal = () => saveModal.style.display = 'none';
-
         if(popButton) popButton.onclick = openSaveModal;
         if(backBtn) backBtn.onclick = closeSaveModal;
         if(closeBtn) closeBtn.onclick = closeSaveModal;
+        window.addEventListener('click', (e) => { if (e.target == saveModal) closeSaveModal(); });
 
-        window.addEventListener('click', (event) => {
-            if (event.target == saveModal) closeSaveModal();
-        });
-
-        document.addEventListener('DOMContentLoaded', () => {
-            allRegisterIds.forEach(id => {
-                const input = document.getElementById(id);
-                if (input && input.tagName === 'INPUT') {
-                    input.addEventListener('keydown', (e) => {
-                        if (e.key === 'Enter') {
-                            e.preventDefault(); input.blur();
-                            //writeRegister(id, input.value);
-                        }
-                    });
-                  input.addEventListener('change', (e) => {
-                  writeRegister(id, input.value);
-                });
-                }
-            });
-
-            document.querySelectorAll('.hmi-interactive-btn').forEach(button => {
-                const config = buttonConfig[button.id];
-                if (!config) return;
-
-                button.addEventListener('click', async () => {
-                    try {
-                        if (config.actions) await performActionsAndAwait(config.actions);
-                        await fetchData();
-                        if (config.redirect) window.location.href = config.redirect;
-                    } catch (error) {
-                        console.error("Button action failed:", error);
-                    }
-                });
-            });
-
-            fetchData();
-            setInterval(fetchData, 1000);
-        });
     </script>
 }

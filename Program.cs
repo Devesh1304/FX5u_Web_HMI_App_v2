@@ -30,6 +30,7 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
     options.SupportedCultures = supportedCultures;
     options.SupportedUICultures = supportedCultures;
 });
+builder.Services.AddSingleton<FX5u_Web_HMI_App.PageStateTracker>();
 
 // --- 3. ADD RAZOR PAGES WITH VIEW LOCALIZATION (CRITICAL FIX) ---
 builder.Services.AddRazorPages()

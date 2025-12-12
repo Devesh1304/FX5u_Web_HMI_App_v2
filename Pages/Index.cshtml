@@ -543,16 +543,24 @@
                     });
                 }
 
-                if (cfg.momentarySideEffect) {
+
+
+            if (cfg.momentarySideEffect) {
                     const addr = cfg.momentarySideEffect.address;
-                    const press = async () => { await writeBit(addr, true);  await fetchModbusData(); };
-                    const release = async () => { await writeBit(addr, false); await fetchModbusData(); };
+
+                    // Define simple async functions
+                    const press = async () => { await writeBit(addr, true); };
+                    const release = async () => { await writeBit(addr, false); };
+
+            // Mouse events (Removed fetchModbusData to prevent lag)
                     button.addEventListener('mousedown', press);
                     button.addEventListener('mouseup',   release);
-                    button.addEventListener('mouseleave',release);
-                    button.addEventListener('touchstart',(e) => { e.preventDefault(); press(); });
-                    button.addEventListener('touchend',  (e) => { e.preventDefault(); release(); });
-                }
+                    button.addEventListener('mouseleave', release);
+
+            // Touch events (Removed e.preventDefault so navigation works!)
+                    button.addEventListener('touchstart', press);
+                    button.addEventListener('touchend',   release);
+            }
             });
 
             fetchModbusData();
