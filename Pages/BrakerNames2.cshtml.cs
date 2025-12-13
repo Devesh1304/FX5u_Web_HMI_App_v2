@@ -63,7 +63,7 @@ namespace FX5u_Web_HMI_App.Pages
         public async Task OnGet()
         {
             _slmpService.SetHeartbeatValue(21); // Heartbeat for page 2
-            await UpdateModelValuesAsync();
+        //    await UpdateModelValuesAsync();
         }
 
         public class WriteStringRequest

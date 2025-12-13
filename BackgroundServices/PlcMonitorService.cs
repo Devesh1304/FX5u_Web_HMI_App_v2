@@ -224,7 +224,180 @@ namespace FX5u_Web_HMI_App.BackgroundServices
 
                         await _hubContext.Clients.Group("PointTable2").SendAsync("ReceivePlcData", data);
                     }
+                    // --- MONITOR POINT TABLE 3 ---
+                    if (_tracker.IsPageActive("PointTable3"))
+                    {
+                        var data = new Dictionary<string, object>();
 
+                        // 1. READ "READ-ONLY" BLOCK (D1855 - D1881)
+                        // Covers PositionRead1 (D1855) to MRead3 (D1880)
+                        var readBlock = await _slmpService.ReadInt16BlockAsync("D1855", 30);
+                        if (readBlock.IsSuccess)
+                        {
+                            var r = readBlock.Content;
+                            // Row 1 (Offset 0 relative to D1855)
+                            data["PositionRead1"] = GetInt32(r, 0); // D1855
+                            data["SpeedRead1"] = r[2];           // D1857
+                            data["AccRead1"] = r[3];
+                            data["DeccRead1"] = r[4];
+                            data["DwellTimeRead1"] = r[5];
+                            data["AuxRead1"] = r[6];
+                            data["MRead1"] = r[7];
+
+                            // Row 2 (Starts at D1864 -> offset 9)
+                            data["PositionRead2"] = GetInt32(r, 9); // D1864
+                            data["SpeedRead2"] = r[11];
+                            data["AccRead2"] = r[12];
+                            data["DeccRead2"] = r[13];
+                            data["DwellTimeRead2"] = r[14];
+                            data["AuxRead2"] = r[15];
+                            data["MRead2"] = r[16];
+
+                            // Row 3 (Starts at D1873 -> offset 18)
+                            data["PositionRead3"] = GetInt32(r, 18); // D1873
+                            data["SpeedRead3"] = r[20];
+                            data["AccRead3"] = r[21];
+                            data["DeccRead3"] = r[22];
+                            data["DwellTimeRead3"] = r[23];
+                            data["AuxRead3"] = r[24];
+                            data["MRead3"] = r[25]; // D1880
+                        }
+
+                        // 2. READ "WRITE" BLOCK (D3809 - D3860)
+                        // Covers PositionWrite1 (D3809) to MWrite3 (D3852)
+                        var writeBlock = await _slmpService.ReadInt16BlockAsync("D3809", 50);
+                        if (writeBlock.IsSuccess)
+                        {
+                            var w = writeBlock.Content;
+
+                            // Row 1 (Offset 0 relative to D3809)
+                            data["PositionWrite1"] = GetInt32(w, 0); // D3809
+                            data["SpeedWrite1"] = w[2];           // D3811
+                            data["AccWrite1"] = w[3];
+                            data["DeccWrite1"] = w[4];
+                            data["DwellTimeWrite1"] = w[5];
+                            data["AuxWrite1"] = w[6];
+                            data["MWrite1"] = w[7];
+
+                            // Row 2 (Starts at D3827 -> offset 18)
+                            data["PositionWrite2"] = GetInt32(w, 18); // D3827
+                            data["SpeedWrite2"] = w[20];
+                            data["AccWrite2"] = w[21];
+                            data["DeccWrite2"] = w[22];
+                            data["DwellTimeWrite2"] = w[23];
+                            data["AuxWrite2"] = w[24];
+                            data["MWrite2"] = w[25];
+
+                            // Row 3 (Starts at D3845 -> offset 36)
+                            data["PositionWrite3"] = GetInt32(w, 36); // D3845
+                            data["SpeedWrite3"] = w[38];
+                            data["AccWrite3"] = w[39];
+                            data["DeccWrite3"] = w[40];
+                            data["DwellTimeWrite3"] = w[41];
+                            data["AuxWrite3"] = w[42];
+                            data["MWrite3"] = w[43];
+                        }
+
+                        // 3. READ TORQUE & TOLERANCE
+                        // SetTolerance: D3950, Torques: D3994/D3998
+                        var miscBlock = await _slmpService.ReadInt16BlockAsync("D3950", 50);
+                        if (miscBlock.IsSuccess)
+                        {
+                            var m = miscBlock.Content;
+                            data["SetTolerance"] = m[0];  // D3950
+                            data["MaxForwardTorque"] = m[44]; // D3994 (Offset 44 from 3950)
+                            data["MaxReverseTorque"] = m[48]; // D3998 (Offset 48 from 3950)
+                        }
+
+                        await _hubContext.Clients.Group("PointTable3").SendAsync("ReceivePlcData", data);
+                    }
+                    // --- MONITOR POINT TABLE 4 ---
+                    if (_tracker.IsPageActive("PointTable4"))
+                    {
+                        var data = new Dictionary<string, object>();
+
+                        // 1. READ "READ-ONLY" BLOCK (D1882 - D1910)
+                        // Covers PositionRead1 (D1882) to MRead3 (D1907)
+                        var readBlock = await _slmpService.ReadInt16BlockAsync("D1882", 30);
+                        if (readBlock.IsSuccess)
+                        {
+                            var r = readBlock.Content;
+                            // Row 1 (Offset 0 relative to D1882)
+                            data["PositionRead1"] = GetInt32(r, 0); // D1882
+                            data["SpeedRead1"] = r[2];           // D1884
+                            data["AccRead1"] = r[3];
+                            data["DeccRead1"] = r[4];
+                            data["DwellTimeRead1"] = r[5];
+                            data["AuxRead1"] = r[6];
+                            data["MRead1"] = r[7];
+
+                            // Row 2 (Starts at D1891 -> offset 9)
+                            data["PositionRead2"] = GetInt32(r, 9); // D1891
+                            data["SpeedRead2"] = r[11];
+                            data["AccRead2"] = r[12];
+                            data["DeccRead2"] = r[13];
+                            data["DwellTimeRead2"] = r[14];
+                            data["AuxRead2"] = r[15];
+                            data["MRead2"] = r[16];
+
+                            // Row 3 (Starts at D1900 -> offset 18)
+                            data["PositionRead3"] = GetInt32(r, 18); // D1900
+                            data["SpeedRead3"] = r[20];
+                            data["AccRead3"] = r[21];
+                            data["DeccRead3"] = r[22];
+                            data["DwellTimeRead3"] = r[23];
+                            data["AuxRead3"] = r[24];
+                            data["MRead3"] = r[25];
+                        }
+
+                        // 2. READ "WRITE" BLOCK (D3863 - D3910)
+                        // Covers PositionWrite1 (D3863) to MWrite3 (D3906)
+                        var writeBlock = await _slmpService.ReadInt16BlockAsync("D3863", 50);
+                        if (writeBlock.IsSuccess)
+                        {
+                            var w = writeBlock.Content;
+
+                            // Row 1 (Offset 0 relative to D3863)
+                            data["PositionWrite1"] = GetInt32(w, 0); // D3863
+                            data["SpeedWrite1"] = w[2];           // D3865
+                            data["AccWrite1"] = w[3];
+                            data["DeccWrite1"] = w[4];
+                            data["DwellTimeWrite1"] = w[5];
+                            data["AuxWrite1"] = w[6];
+                            data["MWrite1"] = w[7];
+
+                            // Row 2 (Starts at D3881 -> offset 18)
+                            data["PositionWrite2"] = GetInt32(w, 18); // D3881
+                            data["SpeedWrite2"] = w[20];
+                            data["AccWrite2"] = w[21];
+                            data["DeccWrite2"] = w[22];
+                            data["DwellTimeWrite2"] = w[23];
+                            data["AuxWrite2"] = w[24];
+                            data["MWrite2"] = w[25];
+
+                            // Row 3 (Starts at D3899 -> offset 36)
+                            data["PositionWrite3"] = GetInt32(w, 36); // D3899
+                            data["SpeedWrite3"] = w[38];
+                            data["AccWrite3"] = w[39];
+                            data["DeccWrite3"] = w[40];
+                            data["DwellTimeWrite3"] = w[41];
+                            data["AuxWrite3"] = w[42];
+                            data["MWrite3"] = w[43];
+                        }
+
+                        // 3. READ TORQUE & TOLERANCE
+                        // SetTolerance: D3962, Torques: D3994/D3998
+                        var miscBlock = await _slmpService.ReadInt16BlockAsync("D3962", 40);
+                        if (miscBlock.IsSuccess)
+                        {
+                            var m = miscBlock.Content;
+                            data["SetTolerance"] = m[0];  // D3962
+                            data["MaxForwardTorque"] = m[32]; // D3994 (Offset 32 from 3962)
+                            data["MaxReverseTorque"] = m[36]; // D3998 (Offset 36 from 3962)
+                        }
+
+                        await _hubContext.Clients.Group("PointTable4").SendAsync("ReceivePlcData", data);
+                    }
                     // --- 1. HANDLE PAGE NAVIGATION LOGIC ---
                     var navResult = await _slmpService.ReadInt16Async("D1"); // Read navigation register
                     if (navResult.IsSuccess)

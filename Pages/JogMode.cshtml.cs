@@ -58,7 +58,7 @@ namespace FX5u_Web_HMI_App.Pages
         public async Task OnGet()
         {
             _slmpService.SetHeartbeatValue(9); // Jog Mode Screen ID
-            await UpdateModelValuesAsync();
+           // await UpdateModelValuesAsync();
         }
 
         public async Task<JsonResult> OnGetReadRegisters()
