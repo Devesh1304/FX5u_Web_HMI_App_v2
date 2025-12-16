@@ -7,12 +7,123 @@
 }
 
 <style>
-    /* CSS FIX: Removes touch delay */
+    /* Styles compatible with _Layout */
+    .container {
+        background-color: #fff;
+        padding: 40px;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        max-width: 900px;
+        margin: 20px auto;
+        text-align: center;
+    }
+
+    h1 {
+        color: #007bff;
+        margin-bottom: 30px;
+    }
+
     .hmi-btn, input {
         touch-action: manipulation;
     }
 
-    /* Modal & Layout Styles */
+    .main-button-container {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr); /* 4 Buttons here (Home/Alarm/Prev/Next) */
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .status-message {
+        margin-top: 25px;
+        padding: 12px;
+        border-radius: 5px;
+        font-weight: 500;
+        border: 1px solid;
+    }
+
+    .status-connected {
+        background-color: #d4edda;
+        color: #155724;
+        border-color: #c3e6cb;
+    }
+
+    .status-disconnected {
+        background-color: #f8d7da;
+        color: #721c24;
+        border-color: #f5c6cb;
+    }
+
+    .write-status {
+        margin-top: 15px;
+        min-height: 1.5em;
+        text-align: left;
+        font-weight: 500;
+        padding: 10px;
+        border-radius: 5px;
+    }
+
+        .write-status.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .write-status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+    /* Inputs/Labels */
+    input[type="number"] {
+        width: 100%;
+        text-align: right;
+        padding: 5px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+    }
+
+    .register-item {
+        margin: 15px 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+        .register-item label {
+            flex: 1;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .register-item input {
+            flex: 1;
+        }
+
+    /* Buttons */
+    .hmi-btn {
+        padding: 15px;
+        font-size: 1.1em;
+        font-weight: bold;
+        color: white;
+        border: 2px solid #343a40;
+        border-radius: 5px;
+        cursor: pointer;
+        width: 100%;
+    }
+
+    .btn-green {
+        background-color: #28a745;
+    }
+
+    .btn-red {
+        background-color: #dc3545;
+    }
+
+    .btn-blue {
+        background-color: #007bff;
+    }
+
+    /* Modal */
     .modal {
         display: none;
         position: fixed;
@@ -28,191 +139,32 @@
 
     .modal-content {
         background-color: #fefefe;
-        color: #333;
         padding: 20px;
         border: 1px solid #888;
         width: 80%;
         max-width: 500px;
         border-radius: 10px;
-        position: relative;
         text-align: center;
+        position: relative;
     }
 
     .close-button {
-        color: #aaa;
         position: absolute;
         top: 10px;
         right: 20px;
         font-size: 28px;
-        font-weight: bold;
         cursor: pointer;
-    }
-
-    .modal-actions {
-        display: flex;
-        justify-content: center;
-        gap: 20px;
-        margin-top: 20px;
-    }
-
-    body {
-        font-family: 'Segoe UI', 'Noto Sans Gujarati', sans-serif;
-        background-color: #e9ecef;
-        color: #343a40;
-    }
-
-    .container {
-        background-color: #fff;
-        padding: 40px;
-        border-radius: 10px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        max-width: 900px;
-        margin: 50px auto;
-        text-align: center;
-    }
-
-    h1 {
-        color: #007bff;
-        margin-bottom: 30px;
-    }
-
-    .status-message {
-        margin-top: 25px;
-        padding: 12px;
-        border-radius: 5px;
-        font-weight: 500;
-        font-size: 1.1em;
-        border: 1px solid;
-    }
-
-    .status-connected {
-        background-color: #d4edda;
-        color: #155724;
-        border-color: #c3e6cb;
-    }
-
-    .status-disconnected, .error-message, .write-status.error {
-        background-color: #f8d7da;
-        color: #721c24;
-        border-color: #f5c6cb;
-    }
-
-    .write-status {
-        margin-top: 15px;
-        padding: 10px;
-        border-radius: 5px;
-        font-weight: 500;
-        text-align: left;
-        min-height: 1.5em;
-    }
-
-        .write-status.success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-    input[type="number"] {
-        text-align: right;
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #ced4da;
-        border-radius: 5px;
-        font-size: 1.05em;
-        box-sizing: border-box;
-    }
-
-    .read-only-value {
-        font-weight: bold;
-        color: #0056b3;
-        text-align: right;
-        padding: 10px;
-        font-size: 1.05em;
-        display: block;
-        min-height: 42.5px;
-    }
-
-    .data-table {
-        width: 100%;
-        margin-top: 20px;
-        border-collapse: collapse;
-        table-layout: fixed;
-    }
-
-        .data-table th, .data-table td {
-            border: 1px solid #dee2e6;
-            padding: 8px;
-            text-align: center;
-            vertical-align: middle;
-        }
-
-        .data-table th, .data-table .row-label {
-            background-color: #f8f9fa;
-            font-weight: bold;
-        }
-
-        .data-table .row-label {
-            text-align: left;
-        }
-
-    .register-item {
-        margin-bottom: 10px;
-        display: flex;
-        align-items: center;
-    }
-
-        .register-item label {
-            flex: 0 0 250px;
-            margin-right: 15px;
-            font-weight: 600;
-            color: #5a6268;
-            text-align: left;
-        }
-
-        .register-item input, .register-item .read-only-value {
-            flex-grow: 1;
-        }
-
-    .hmi-btn {
-        flex-grow: 1;
-        margin-top: 10px;
-        padding: 15px;
-        font-size: 1.1em;
-        font-weight: bold;
-        color: white;
-        border: 2px solid #343a40;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: background-color 0.3s ease, visibility 0.3s ease;
-    }
-
-    .btn-green {
-        background-color: #28a745;
-    }
-
-    .btn-red {
-        background-color: #dc3545;
-    }
-
-    .btn-blue {
-        background-color: #007bff;
-    }
-
-    .main-button-container {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 10px;
     }
 </style>
 
-<div class="container text-center">
+<div class="container">
     <a id="btn-pop" style="cursor:pointer;"><h1>@Localizer["Point Table 2"]</h1></a>
     @Html.AntiForgeryToken()
 
     <div class="status-message" id="connectionStatus">Disconnected</div>
     <div class="error-message" id="errorMessage" style="display: none;"></div>
 
-    <div class="main-button-container">
+    <div class="main-button-container" style="grid-template-columns: 1fr;">
         <button class="hmi-btn hmi-interactive-btn btn-green" id="btn-save">@Localizer["SAVE"]</button>
     </div>
 
@@ -220,99 +172,17 @@
         <div class="modal-content">
             <span class="close-button">&times;</span>
             <h2>@Localizer["TOLERANCE"]</h2>
-            <div class="register-item"><input type="number" id="SetTolerance" /></div>
-            <div class="modal-actions">
+            <div class="register-item">
+                <label>@Localizer["Set Tolerance"]</label>
+                <input type="number" id="SetTolerance" />
+            </div>
+            <div class="modal-actions" style="margin-top:20px;">
                 <button id="backBtn" class="hmi-btn btn-red">@Localizer["BACK"]</button>
             </div>
         </div>
     </div>
 
-    @* Reuse the same Partial View structure manually since names align with Model properties *@
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th style="width: 150px;"></th>
-                <th>@Localizer["WRITE 1"]</th>
-                <th>@Localizer["WRITE 2"]</th>
-                <th>@Localizer["WRITE 3"]</th>
-                <th>@Localizer["READ 1"]</th>
-                <th>@Localizer["READ 2"]</th>
-                <th>@Localizer["READ 3"]</th>
-            </tr>
-        </thead>
-        <tbody>
-            @* Row 1 *@
-            <tr>
-                <td class="row-label">@Localizer["POSITION"]</td>
-                <td><input type="number" id="PositionWrite1" /></td>
-                <td><input type="number" id="PositionWrite2" /></td>
-                <td><input type="number" id="PositionWrite3" /></td>
-                <td><span class="read-only-value" id="PositionRead1"></span></td>
-                <td><span class="read-only-value" id="PositionRead2"></span></td>
-                <td><span class="read-only-value" id="PositionRead3"></span></td>
-            </tr>
-            @* Row 2 *@
-            <tr>
-                <td class="row-label">@Localizer["SPEED"]</td>
-                <td><input type="number" id="SpeedWrite1" /></td>
-                <td><input type="number" id="SpeedWrite2" /></td>
-                <td><input type="number" id="SpeedWrite3" /></td>
-                <td><span class="read-only-value" id="SpeedRead1"></span></td>
-                <td><span class="read-only-value" id="SpeedRead2"></span></td>
-                <td><span class="read-only-value" id="SpeedRead3"></span></td>
-            </tr>
-            @* Row 3 *@
-            <tr>
-                <td class="row-label">@Localizer["ACC"]</td>
-                <td><input type="number" id="AccWrite1" /></td>
-                <td><input type="number" id="AccWrite2" /></td>
-                <td><input type="number" id="AccWrite3" /></td>
-                <td><span class="read-only-value" id="AccRead1"></span></td>
-                <td><span class="read-only-value" id="AccRead2"></span></td>
-                <td><span class="read-only-value" id="AccRead3"></span></td>
-            </tr>
-            @* Row 4 *@
-            <tr>
-                <td class="row-label">@Localizer["DECC"]</td>
-                <td><input type="number" id="DeccWrite1" /></td>
-                <td><input type="number" id="DeccWrite2" /></td>
-                <td><input type="number" id="DeccWrite3" /></td>
-                <td><span class="read-only-value" id="DeccRead1"></span></td>
-                <td><span class="read-only-value" id="DeccRead2"></span></td>
-                <td><span class="read-only-value" id="DeccRead3"></span></td>
-            </tr>
-            @* Row 5 *@
-            <tr>
-                <td class="row-label">@Localizer["DWELL TIME"]</td>
-                <td><input type="number" id="DwellTimeWrite1" /></td>
-                <td><input type="number" id="DwellTimeWrite2" /></td>
-                <td><input type="number" id="DwellTimeWrite3" /></td>
-                <td><span class="read-only-value" id="DwellTimeRead1"></span></td>
-                <td><span class="read-only-value" id="DwellTimeRead2"></span></td>
-                <td><span class="read-only-value" id="DwellTimeRead3"></span></td>
-            </tr>
-            @* Row 6 *@
-            <tr>
-                <td class="row-label">@Localizer["AUX. FUN."]</td>
-                <td><input type="number" id="AuxWrite1" /></td>
-                <td><input type="number" id="AuxWrite2" /></td>
-                <td><input type="number" id="AuxWrite3" /></td>
-                <td><span class="read-only-value" id="AuxRead1"></span></td>
-                <td><span class="read-only-value" id="AuxRead2"></span></td>
-                <td><span class="read-only-value" id="AuxRead3"></span></td>
-            </tr>
-            @* Row 7 *@
-            <tr>
-                <td class="row-label">@Localizer["M - CODE"]</td>
-                <td><input type="number" id="MWrite1" /></td>
-                <td><input type="number" id="MWrite2" /></td>
-                <td><input type="number" id="MWrite3" /></td>
-                <td><span class="read-only-value" id="MRead1"></span></td>
-                <td><span class="read-only-value" id="MRead2"></span></td>
-                <td><span class="read-only-value" id="MRead3"></span></td>
-            </tr>
-        </tbody>
-    </table>
+    <partial name="Shared/_PointTablePartial" model="Model" />
 
     <div class="write-status" id="writeStatusMessage"></div>
 
@@ -335,7 +205,6 @@
 
     <script>
         const writeStatusMessageDiv = document.getElementById('writeStatusMessage');
-
         let registerValues = { PointControlRegister: 0 };
         const fieldsToDivideBy10 = [
             "PositionWrite1", "PositionWrite2", "PositionWrite3",
@@ -343,52 +212,54 @@
         ];
 
         const buttonConfig = {
-            'btn-save': {
-                actions: [{ type: 'toggle', register: 'PointControlRegister', position: 0 }]
-            },
+            'btn-save': { actions: [{ type: 'toggle', register: 'PointControlRegister', position: 0 }] },
             'btn-home': { actions: [], redirect: '/Index' },
             'btn-alm':  { actions: [], redirect: '/Alarms' },
             'btn-prev': { actions: [], redirect: '/PointTable1' },
-            'btn-next': { actions: [], redirect: '/PointTable3' } // Or wherever Table 3 is
+            'btn-next': { actions: [], redirect: '/PointTable3' }
         };
 
-        // Serialize all property names from the model
         const allRegisterIds = @Html.Raw(Json.Serialize(Model.GetType().GetProperties().Where(p => p.IsDefined(typeof(Microsoft.AspNetCore.Mvc.BindPropertyAttribute), false) && p.Name != "ConnectionStatus" && p.Name != "ErrorMessage").Select(p => p.Name)));
 
-        // --- 1. INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
-            // Join the specific SignalR Group
-            startSignalR("PointTable2");
+            // Join specific group
+               setTimeout(() => {
+            if (typeof startSignalR === 'function') startSignalR("PointTable2");
+        }, 500);
 
-            // Initialize Input Event Listeners
             document.querySelectorAll('input[type="number"]').forEach(input => {
                 input.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
                 });
                 input.addEventListener('change', (e) => {
-                    writeRegister(input.id, input.value);
+                    // Stay on page: isBackground = false
+                    writeRegister(input.id, input.value, false);
                 });
             });
 
-            // Initialize Button Click Listeners
             document.querySelectorAll('.hmi-interactive-btn').forEach(btn => {
                 const cfg = buttonConfig[btn.id];
                 if (!cfg) return;
 
                 btn.addEventListener('click', async () => {
                     try {
-                        if (cfg.actions && cfg.actions.length > 0) {
-                            await performActionsAndAwait(cfg.actions);
-                        }
                         if (cfg.redirect) {
+                            // Navigation: Fire background write & redirect instantly
+                            if (cfg.actions && cfg.actions.length > 0) {
+                                performActionsAndAwait(cfg.actions, true);
+                            }
                             window.location.href = cfg.redirect;
+                        } else {
+                            // Normal Action: Write & Wait
+                            if (cfg.actions && cfg.actions.length > 0) {
+                                await performActionsAndAwait(cfg.actions, false);
+                            }
                         }
                     } catch (e) { console.error("Action error:", e); }
                 });
             });
         });
 
-        // --- 2. SIGNALR UPDATE HANDLER ---
         window.onPlcUpdate = function(data) {
             const statusDiv = document.getElementById('connectionStatus');
             if(statusDiv) {
@@ -397,47 +268,40 @@
             }
 
             for (const [key, value] of Object.entries(data)) {
-                // Keep local cache updated for toggles
                 registerValues[key] = value;
-
                 const el = document.getElementById(key);
                 if (el) {
                     if (el.tagName === "INPUT" && document.activeElement === el) continue;
-
                     let displayVal = value;
                     if (fieldsToDivideBy10.some(f => key.includes(f) || key === f)) {
                         if(!isNaN(value)) displayVal = (value / 440.0).toFixed(1);
                     }
-
                     if (el.tagName === "INPUT") el.value = displayVal;
                     else el.textContent = displayVal;
                 }
             }
         };
 
-        // --- 3. WRITE FUNCTIONS ---
-        async function performActionsAndAwait(actions) {
+        async function performActionsAndAwait(actions, isBackground = false) {
             const registersToUpdate = new Map();
-            for (const action of actions) {
-                if (action.type === 'momentary') continue;
-                const reg = action.register;
+            for (const a of actions) {
+                if (a.type === 'momentary') continue;
+                const reg = a.register;
                 let current = registersToUpdate.has(reg) ? registersToUpdate.get(reg) : (registerValues[reg] || 0);
-
-                if (action.type === 'toggle') current ^= (1 << action.position);
-                else if (action.type === 'set') current |= (1 << action.position);
-                else if (action.type === 'reset') current &= ~(1 << action.position);
-
+                if (a.type === 'toggle') current ^= (1 << a.position);
+                else if (a.type === 'set') current |= (1 << a.position);
+                else if (a.type === 'reset') current &= ~(1 << a.position);
                 registersToUpdate.set(reg, current);
             }
             const writes = [];
             for (const [reg, val] of registersToUpdate) {
-                writes.push(writeRegister(reg, val.toString()));
+                writes.push(writeRegister(reg, val.toString(), isBackground));
             }
             return Promise.all(writes);
         }
 
-        async function writeRegister(name, value) {
-            if(writeStatusMessageDiv) {
+        async function writeRegister(name, value, isBackground = false) {
+            if (!isBackground && writeStatusMessageDiv) {
                 writeStatusMessageDiv.textContent = `Sending...`;
                 writeStatusMessageDiv.className = 'write-status';
             }
@@ -449,15 +313,24 @@
                 else return;
             }
 
+            // CRITICAL: keepalive: true
+            const fetchOptions = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: JSON.stringify({ RegisterName: name, Value: valToSend }),
+                keepalive: isBackground
+            };
+
             try {
-                const res = await fetch(`?handler=WriteRegister`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-                    },
-                    body: JSON.stringify({ RegisterName: name, Value: valToSend })
-                });
+                if (isBackground) {
+                    fetch(`?handler=WriteRegister`, fetchOptions).catch(e => console.error("Bg write error", e));
+                    return;
+                }
+
+                const res = await fetch(`?handler=WriteRegister`, fetchOptions);
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const j = await res.json();
                 if(writeStatusMessageDiv) {
@@ -483,6 +356,5 @@
         if(backBtn) backBtn.onclick = closeSaveModal;
         if(closeBtn) closeBtn.onclick = closeSaveModal;
         window.addEventListener('click', (e) => { if (e.target == saveModal) closeSaveModal(); });
-
     </script>
 }

@@ -7,49 +7,149 @@
 }
 
 <style>
-    /* --- Your Existing Styles --- */
-    body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background-color: #e9ecef;
-        color: #343a40;
-        display: flex;
-        justify-content: center;
-        align-items: flex-start;
-        min-height: 100vh;
-        margin: 0;
-        padding-top: 50px;
-    }
-
+    /* --- MAIN CONTAINER --- */
     .container {
         background-color: #ffffff;
-        padding: 40px;
+        padding: 24px 28px;
         border-radius: 10px;
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         width: 100%;
         max-width: 800px;
         text-align: center;
+        margin: 20px auto; /* Centers container nicely */
     }
 
     h1 {
         color: #007bff;
-        margin-bottom: 30px;
+        margin-bottom: 20px;
+        font-size: 1.5rem;
     }
 
-    input[type="number"] {
+    /* --- DASHBOARD LIST (Fixed "Scattered" Issue) --- */
+    .register-list {
+        margin-top: 10px;
+        text-align: left;
+    }
+
+    .register-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between; /* Keeps Label Left, Value Right */
+        padding: 8px 0;
+        margin-bottom: 5px;
+        border-bottom: 1px solid #f1f1f1; /* subtle separator */
+    }
+
+        .register-item label {
+            font-weight: 600;
+            color: #5a6268;
+            text-align: left;
+            flex: 1; /* Takes available space */
+            margin-right: 10px;
+            font-size: 1rem;
+        }
+
+    .read-only-value, input[type="number"] {
+        font-weight: bold;
+        color: #0056b3;
         text-align: right;
-        width: calc(100% - 22px);
-        padding: 10px;
-        border: 1px solid #ced4da;
-        border-radius: 5px;
+        min-width: 100px;
         font-size: 1.05em;
     }
 
-    .status-message {
+    input[type="number"] {
+        padding: 8px;
+        border: 1px solid #ced4da;
+        border-radius: 5px;
+        width: 120px;
+    }
+
+    /* --- INDICATORS (LEDs) --- */
+    .indicator-section {
         margin-top: 25px;
-        padding: 12px;
+        padding-top: 15px;
+        border-top: 1px solid #dee2e6;
+    }
+
+    .indicator-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+        padding: 5px 10px;
+        background-color: #f8f9fa;
+        border-radius: 5px;
+    }
+
+        .indicator-item label {
+            font-weight: 600;
+            color: #5a6268;
+            font-size: 1rem;
+            margin: 0;
+        }
+
+    .led-indicator {
+        width: 28px;
+        height: 28px;
+        background-color: #dc3545; /* Red Off */
+        border-radius: 50%;
+        border: 2px solid #333;
+        transition: background-color 0.3s ease;
+        box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+    }
+
+    .led-on {
+        background-color: #28a745; /* Green On */
+        box-shadow: 0 0 10px #28a745, inset 0 0 5px rgba(255,255,255,0.5);
+    }
+
+    /* --- BUTTONS --- */
+    .button-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr); /* 3 Columns for JOG buttons */
+        gap: 10px;
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+
+    .main-button-container {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr); /* 3 Columns for Nav buttons */
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .hmi-btn {
+        flex-grow: 1;
+        padding: 15px;
+        font-size: 1.1em;
+        font-weight: bold;
+        color: white;
+        border: 2px solid #343a40;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        touch-action: manipulation;
+    }
+
+    .btn-green {
+        background-color: #28a745;
+    }
+
+    .btn-red {
+        background-color: #dc3545;
+    }
+
+    .btn-blue {
+        background-color: #007bff;
+    }
+
+    /* --- STATUS MESSAGES --- */
+    .status-message {
+        margin-top: 15px;
+        padding: 10px;
         border-radius: 5px;
         font-weight: 500;
-        font-size: 1.1em;
         border: 1px solid;
     }
 
@@ -65,79 +165,6 @@
         border-color: #f5c6cb;
     }
 
-    .error-message, .write-status.error {
-        background-color: #f8d7da;
-        color: #721c24;
-        border: 1px solid #f5c6cb;
-        padding: 12px;
-        margin-top: 15px;
-        border-radius: 5px;
-        font-weight: 500;
-        text-align: left;
-    }
-
-    .register-list {
-        margin-top: 20px;
-        text-align: left;
-    }
-
-    .register-item {
-        margin-bottom: 10px;
-        display: flex;
-        align-items: center;
-    }
-
-        .register-item label {
-            flex: 0 0 250px;
-            margin-right: 15px;
-            font-weight: 600;
-            color: #5a6268;
-            text-align: left;
-        }
-
-        .register-item input, .register-item .read-only-value {
-            flex-grow: 1;
-        }
-
-    .read-only-value {
-        font-weight: bold;
-        color: #0056b3;
-        text-align: right;
-        padding: 10px;
-        font-size: 1.05em;
-    }
-
-    .hmi-btn {
-        flex-grow: 1;
-        padding: 15px;
-        font-size: 1.1em;
-        font-weight: bold;
-        color: white;
-        border: 2px solid #343a40;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: background-color 0.3s ease, visibility 0.3s ease;
-    }
-
-    .btn-green {
-        background-color: #28a745;
-    }
-
-    .btn-red {
-        background-color: #dc3545;
-    }
-
-    .btn-blue {
-        background-color: #007bff;
-    }
-
-    .button-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 10px;
-        margin-top: 20px;
-    }
-
     .write-status {
         margin-top: 15px;
         padding: 10px;
@@ -145,7 +172,6 @@
         font-weight: 500;
         text-align: left;
         min-height: 1.5em;
-        border: 1px solid transparent;
     }
 
         .write-status.success {
@@ -154,49 +180,37 @@
             border: 1px solid #c3e6cb;
         }
 
-    .main-button-container {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 10px;
-        margin-top: 10px;
-    }
-
-    /* LED Indicators */
-    .indicator-section {
-        margin-top: 25px;
-        padding-top: 15px;
-        border-top: 1px solid #dee2e6;
-    }
-
-    .indicator-item {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 10px;
-    }
-
-        .indicator-item label {
-            font-weight: 600;
-            color: #5a6268;
-            font-size: 1.1em;
+        .write-status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
         }
 
-    .led-indicator {
-        width: 28px;
-        height: 28px;
-        background-color: #dc3545;
-        border-radius: 50%;
-        border: 2px solid #333;
-        transition: background-color 0.3s ease;
-        box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
-    }
+    /* --- MOBILE OVERRIDES --- */
+    @@media screen and (max-width: 768px) {
+        /* 1. FORCE ROW LAYOUT for Dashboard Items */
+        .register-item {
+            flex-direction: row !important;
+            align-items: center !important;
+        }
 
-    .led-on {
-        background-color: #28a745;
-        box-shadow: 0 0 10px #28a745, inset 0 0 5px rgba(255,255,255,0.5);
-    }
-   .hmi-btn, .btn-select {
-        touch-action: manipulation; /* Removes 300ms delay on mobile/tablets */
+            .register-item label {
+                margin-bottom: 0 !important;
+                width: auto !important;
+                font-size: 0.95em;
+            }
+        /* 2. Responsive Grids */
+        .button-grid {
+            grid-template-columns: repeat(2, 1fr); /* 2 cols on mobile is easier to tap */
+        }
+
+        .main-button-container {
+            grid-template-columns: repeat(3, 1fr); /* Keep nav buttons as is, or switch to 1fr if too tight */
+        }
+
+        .container {
+            padding: 15px;
+        }
     }
 </style>
 

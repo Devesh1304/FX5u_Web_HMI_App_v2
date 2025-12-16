@@ -54,7 +54,7 @@ namespace FX5u_Web_HMI_App.Pages
 
         public async Task OnGet()
         {
-            _slmpService.SetHeartbeatValue(5);
+           // 
            // await UpdateModelValuesAsync();
         }
 
@@ -196,6 +196,7 @@ namespace FX5u_Web_HMI_App.Pages
         {
             try
             {
+                _slmpService.SetHeartbeatValue(5);
                 // Batch reads
                 var block1 = await _slmpService.ReadInt16BlockAsync("D2", 99);
                 if (!block1.IsSuccess) throw new Exception(block1.Message);

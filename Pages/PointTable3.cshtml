@@ -267,7 +267,9 @@
         const allRegisterIds = @Html.Raw(Json.Serialize(Model.GetType().GetProperties().Where(p => p.IsDefined(typeof(Microsoft.AspNetCore.Mvc.BindPropertyAttribute), false) && p.Name != "ConnectionStatus" && p.Name != "ErrorMessage").Select(p => p.Name)));
 
         document.addEventListener('DOMContentLoaded', () => {
+              setTimeout(() => {
             if (typeof startSignalR === 'function') startSignalR("PointTable3");
+        }, 500);
 
             document.querySelectorAll('input[type="number"]').forEach(input => {
                 input.addEventListener('keydown', (e) => {
