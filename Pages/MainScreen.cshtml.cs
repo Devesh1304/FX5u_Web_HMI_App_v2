@@ -54,8 +54,8 @@ namespace FX5u_Web_HMI_App.Pages
 
         public async Task OnGet()
         {
-           // 
-           // await UpdateModelValuesAsync();
+            _slmpService.SetHeartbeatValue(5);
+            await UpdateModelValuesAsync();
         }
 
         public async Task<JsonResult> OnGetReadRegisters()
@@ -196,7 +196,6 @@ namespace FX5u_Web_HMI_App.Pages
         {
             try
             {
-                _slmpService.SetHeartbeatValue(5);
                 // Batch reads
                 var block1 = await _slmpService.ReadInt16BlockAsync("D2", 99);
                 if (!block1.IsSuccess) throw new Exception(block1.Message);
@@ -217,15 +216,14 @@ namespace FX5u_Web_HMI_App.Pages
                 MaxReverseTorque = (await _slmpService.ReadInt16Async("D802")).Content;
                 D1402 = (await _slmpService.ReadInt16Async("D1402")).Content;
                 ServoError = (await _slmpService.ReadInt16Async("D1706")).Content;
-
+                RackingInValue = (await _slmpService.ReadInt16Async("D1702")).Content;
+                RackingOutValue = (await _slmpService.ReadInt16Async("D1712")).Content;
 
                 // Singles (32-bit)
                 InstantTorque = (await _slmpService.ReadInt32Async("D532")).Content;
                 TotalTravelLength = (await _slmpService.ReadInt32Async("D900")).Content;
                 CurrentPosition = (await _slmpService.ReadInt32Async("D1702")).Content;
                 PositionAtEmergency = (await _slmpService.ReadInt32Async("D1708")).Content;
-                RackingInValue = (await _slmpService.ReadInt32Async("D1702")).Content;
-                RackingOutValue = (await _slmpService.ReadInt32Async("D1712")).Content;
 
                 // English names for initial render
                 var names = await ReadBreakerTypesEnAsync();

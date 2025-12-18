@@ -17,7 +17,7 @@ var builder = WebApplication.CreateBuilder(args);
 // --- 2. CONFIGURE LOCALIZATION OPTIONS ---
 var supportedCultures = new[]
 {
-    new CultureInfo("en-US"), // English (United States)
+    new CultureInfo("en-IN"), // English (United States)
     new CultureInfo("gu-IN")  // Gujarati (India)
 };
 
@@ -26,7 +26,7 @@ builder.Services.AddLocalization(options => options.ResourcesPath = "Resources")
 
 builder.Services.Configure<RequestLocalizationOptions>(options =>
 {
-    options.DefaultRequestCulture = new RequestCulture("en-US");
+    options.DefaultRequestCulture = new RequestCulture("en-IN");
     options.SupportedCultures = supportedCultures;
     options.SupportedUICultures = supportedCultures;
 });
@@ -76,19 +76,19 @@ app.MapRazorPages();
 app.MapHub<PlcHub>("/plcHub");
 
 // --- 6. AUTOMATICALLY CREATE/UPDATE THE DATABASE ON STARTUP ---
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    try
-    {
-        var dbContext = services.GetRequiredService<LogDbContext>();
-        dbContext.Database.Migrate();
-    }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while migrating the database.");
-    }
-}
+ using (var scope = app.Services.CreateScope())
+ {
+     var services = scope.ServiceProvider;
+     try
+     {
+         var dbContext = services.GetRequiredService<LogDbContext>();
+         dbContext.Database.Migrate();
+     }
+     catch (Exception ex)
+     {
+         var logger = services.GetRequiredService<ILogger<Program>>();
+         logger.LogError(ex, "An error occurred while migrating the database.");
+     }
+ }
 
 app.Run();

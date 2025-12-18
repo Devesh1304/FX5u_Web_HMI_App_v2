@@ -6,12 +6,11 @@
     ViewData["Title"] = Localizer["Home Screen"];
 }
 
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Gujarati:wght@400;600&display=swap" rel="stylesheet" />
 
 <style>
     /* --- Your Existing Styles --- */
     body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, 'Noto Sans Gujarati', sans-serif;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         background-color: #e9ecef;
         color: #343a40;
         display: flex;
@@ -543,24 +542,16 @@
                     });
                 }
 
-
-
-            if (cfg.momentarySideEffect) {
+                if (cfg.momentarySideEffect) {
                     const addr = cfg.momentarySideEffect.address;
-
-                    // Define simple async functions
-                    const press = async () => { await writeBit(addr, true); };
-                    const release = async () => { await writeBit(addr, false); };
-
-            // Mouse events (Removed fetchModbusData to prevent lag)
+                    const press = async () => { await writeBit(addr, true);  await fetchModbusData(); };
+                    const release = async () => { await writeBit(addr, false); await fetchModbusData(); };
                     button.addEventListener('mousedown', press);
                     button.addEventListener('mouseup',   release);
-                    button.addEventListener('mouseleave', release);
-
-            // Touch events (Removed e.preventDefault so navigation works!)
-                    button.addEventListener('touchstart', press);
-                    button.addEventListener('touchend',   release);
-            }
+                    button.addEventListener('mouseleave',release);
+                    button.addEventListener('touchstart',(e) => { e.preventDefault(); press(); });
+                    button.addEventListener('touchend',  (e) => { e.preventDefault(); release(); });
+                }
             });
 
             fetchModbusData();

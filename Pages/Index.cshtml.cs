@@ -66,8 +66,8 @@ namespace FX5u_Web_HMI_App.Pages
 
         public async Task OnGet()
         {
-          //   // Index Page ID
-        //    await UpdateModelValuesAsync();
+            _slmpService.SetHeartbeatValue(7); // Index Page ID
+            await UpdateModelValuesAsync();
         }
 
         public async Task<JsonResult> OnGetReadRegisters()
@@ -175,7 +175,6 @@ namespace FX5u_Web_HMI_App.Pages
         {
             try
             {
-                _slmpService.SetHeartbeatValue(7);
                 foreach (var entry in _intAddressMap)
                 {
                     var result = await _slmpService.ReadInt16Async(entry.Value);

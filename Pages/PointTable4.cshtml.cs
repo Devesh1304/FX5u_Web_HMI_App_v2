@@ -14,7 +14,7 @@ namespace FX5u_Web_HMI_App.Pages
         public override async Task OnGet()
         {
             _slmpService.SetHeartbeatValue(4); // Set a unique value for this screen
-          //  await base.OnGet(); // This calls the base class's OnGet method
+            await base.OnGet(); // This calls the base class's OnGet method
         }
 
         // --- Provide the specific addresses for Point Table 2 ---

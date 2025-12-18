@@ -18,56 +18,56 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/FX5u_Web_HMI_App.styles.css" asp-append-version="true" />
 
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Gujarati:wght@400;600&display=swap" rel="stylesheet" />
+   
 
     <style>
         /* --- 1. GLOBAL BASE STYLES --- */
         body {
             /* Ensure Gujarati font is available globally */
-            font-family: 'Segoe UI', 'Noto Sans Gujarati', sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             overflow-x: hidden; /* Prevent horizontal scroll on body */
         }
 
         /* --- TOP BAR STYLES --- */
-    .top-bar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 60px;
-        background-color: #343a40; /* Dark Grey Bar */
-        color: white;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0 20px;
-        z-index: 1030;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    }
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background-color: #343a40; /* Dark Grey Bar */
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 1030;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
 
-    .brand-title a {
-        color: white;
-        text-decoration: none;
-        font-size: 1.25rem;
-        font-weight: bold;
-    }
+        .brand-title a {
+            color: white;
+            text-decoration: none;
+            font-size: 1.25rem;
+            font-weight: bold;
+        }
 
-    .language-switcher-container {
-        display: flex;
-        align-items: center;
-    }
+        .language-switcher-container {
+            display: flex;
+            align-items: center;
+        }
 
-    .language-switcher-container label {
-        margin-right: 10px;
-        font-weight: 500;
-        color: #f8f9fa;
-    }
+            .language-switcher-container label {
+                margin-right: 10px;
+                font-weight: 500;
+                color: #f8f9fa;
+            }
 
-    /* Pushes the page content down so it starts below the 60px header */
-    .content-wrapper {
-        margin-top: 70px; 
-        padding-bottom: 20px;
-    }
+        /* Pushes the page content down so it starts below the 60px header */
+        .content-wrapper {
+            margin-top: 70px;
+            padding-bottom: 20px;
+        }
 
         /* Language Switcher Styling */
         .language-switcher {
@@ -100,8 +100,8 @@
         }
 
         /* =========================================
-                   RESPONSIVE MEDIA QUERIES
-                   ========================================= */
+                           RESPONSIVE MEDIA QUERIES
+                           ========================================= */
 
         /* --- TABLETS (Portrait & Landscape) --- */
         @@media screen and (max-width: 1024px) {
@@ -207,7 +207,7 @@
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
     <script src="~/js/plc-signalr.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
@@ -217,9 +217,9 @@
         function setLanguage(culture) {
             // Set Cookie
             document.cookie = ".AspNetCore.Culture=c=" + culture + "|uic=" + culture + ";path=/;max-age=31536000";
-            
+
             // Set LocalStorage (for client-side checks)
-            try { 
+            try {
                 localStorage.setItem('hmi_lang', culture === 'gu-IN' ? 'gu' : 'en');
             } catch(e) {}
 
@@ -233,9 +233,9 @@
             try {
                 const savedLang = localStorage.getItem('hmi_lang');
                 if (langSelect && savedLang) {
-                    const currentVal = langSelect.value; 
+                    const currentVal = langSelect.value;
                     const targetVal = (savedLang === 'gu' || savedLang.includes('gu')) ? 'gu-IN' : 'en-US';
-                    
+
                     // Keep dropdown in sync with storage if they differ
                     if (currentVal !== targetVal) {
                         langSelect.value = targetVal;

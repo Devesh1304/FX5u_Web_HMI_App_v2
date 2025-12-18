@@ -57,8 +57,8 @@ namespace FX5u_Web_HMI_App.Pages
 
         public async Task OnGet()
         {
-          //   // Jog Mode Screen ID
-           // await UpdateModelValuesAsync();
+            _slmpService.SetHeartbeatValue(9); // Jog Mode Screen ID
+            await UpdateModelValuesAsync();
         }
 
         public async Task<JsonResult> OnGetReadRegisters()
@@ -136,7 +136,6 @@ namespace FX5u_Web_HMI_App.Pages
         {
             try
             {
-                _slmpService.SetHeartbeatValue(9);
                 // --- BATCH READ 1: 16-bit integers ---
                 // Reading 99 words starting at D2 covers up to D100 (D2 + 98 = D100)
                 var block1Result = await _slmpService.ReadInt16BlockAsync("D2", 99);
